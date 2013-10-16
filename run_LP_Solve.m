@@ -6,7 +6,7 @@
 %           confVal       - vector of configuration valus
 %           verbose       - tell me more...
 
-function  = run_LP_Solve(configurations,agent2conf,confVal,verbose)
+function [] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     
     % constraints - every target has at most one agent assigned to it =>
     %               #rows(configuration) constraints
@@ -16,4 +16,16 @@ function  = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     %               #rows(agents2conf) constraints
     
     lp=mxlpsolve('make_lp', 0, 0);
-    mxlpsolve('set_obj_fn', lp, [1, 3, 6.24, 0.1]);
+    % since lp_solve can't accept a matrix in its objective function, we
+    % will flatten the matrix to an array (i.e. x(i,j) = x[i*n + j]
+    
+    % some required variables 
+    NumOfAgents = size(agent2conf,1);
+    
+    % make sure confval is a row vector
+    size(confVal,1) > 1 && (confVal == confVal');
+    size(confVal,1) > 1 && error('confVal must be either row or col vector');
+    
+    c = repmat(confVal,[1,NumOfAgents])
+    mxlpsolve('set_obj_fn', lp, c');
+    mxlpsolve('write_lp', lp, 'debug.lp');
