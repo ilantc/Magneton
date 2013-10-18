@@ -1,20 +1,4 @@
-function [ drone_targets ] = building_tables_1( drone_sensor,targets)
-    N=size(drone_sensor,1);
-    T=size(targets,1);
-    drone_targets=ones(N,T);    
-    targets_sensor=(targets(:,1))'; % first column is "mataad"
-    for i=1:N; %building the drone vs target table, drone at rows , N=size of drons
-        for j=1:T; % T =size of targets
-            if (drone_sensor(i,targets_sensor(j)));
-                drone_targets(i,j)=1;
-            else
-                drone_targets(i,j)=0;
-            end
-        end
-    end
-end
-    
-function [ targets_conf_clean ] = building_tables_2( targets_conf,targets)
+function [ targets_conf_clean ] = cleanConfigurations( targets_conf,targets)
     % removing all unpossible configurations.
     max_target_per_drone=3;
     T=size(targets,1);
@@ -72,17 +56,3 @@ function [ targets_conf_clean ] = building_tables_2( targets_conf,targets)
         end
     end
 end
-                
-            
-
-function [ agent2conf ] = building_tables_3( targets_conf,drone_targets)
-    % building agent2conf table : for each agent his configurations
-    T=size(targets_conf,1);
-    C=size(targets_conf,2); %num of conf
-    N=size(drone_targets,1);
-    
-    targets_conf_bool = (targets_conf>=ones(N,C)); %N=size of drons, C= size of configurations
-    temp=repmat(sum(targets_conf_bool),[T,1]);
-    agent2conf=(drone_targets*targets_conf>=temp);      
-end
-
