@@ -1,4 +1,4 @@
-function [ agent2conf ] = buildi_agent2conf( targets_conf,drone_targets)
+function [ agent2conf ] = build_agent2conf( targets_conf,drone_targets)
     % building agent2conf table : for each agent his configurations
     T=size(targets_conf,1);
     C=size(targets_conf,2); %num of conf
