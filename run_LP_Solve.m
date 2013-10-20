@@ -24,14 +24,16 @@ function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     NumOfConf       = size(agent2conf,2);
     NumOfTargets    = size(configurations,1);
     NumOfVariables  = NumOfAgents * NumOfConf;
-    
-    verbose && fprintf('\nINFO:NumOfAgenets=%d,NumOfConf=%d,NumOfTargets=%d',NumOfAgenets,NumOfConf,NumOfTargets);
+
+    verbose && fprintf('\nINFO: NumOfAgenets=%d, NumOfConf=%d, NumOfTargets=%d, NumOfVariables=%d',NumOfAgents,NumOfConf,NumOfTargets,NumOfVariables);
     
     lp=mxlpsolve('make_lp', 0, NumOfVariables);
     mxlpsolve('set_maxim',lp);
     
     % make sure confval is a row vector
-    size(confVal,1) > 1 && (confVal == confVal');
+    if (size(confVal,1) > 1)
+        confVal = confVal';
+    end
     size(confVal,1) > 1 && error('confVal must be either row or col vector');
     
     c = repmat(confVal,[1,NumOfAgents]);
@@ -53,8 +55,9 @@ function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     
     % making sure agents are only assigned to legal configurations:
     row         = reshape(agent2conf',[1,NumOfVariables]);
-    leftSide    = sum(row);
-    mxlpsolve('add_constraint', lp, row,'LE',leftSide);
+    row         = row -1;
+    leftSide    = 0;
+    mxlpsolve('add_constraint', lp, row,'GE',leftSide);
     
     % adding binary constraints 
     for i=1:NumOfVariables
@@ -62,6 +65,27 @@ function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     end
     mxlpsolve('write_lp', lp, 'debug.lp');
     mxlpsolve('solve', lp);
+    
+    res = mxlpsolve('get_objective',lp);
+    mat = mxlpsolve('get_variables',lp);
+    mat = reshape(mat,[NumOfConf,NumOfAgents])';
+    configurations = full(configurations);
+    
+    fprintf('\n\n\n######## results ########\n');
+    for agent = 1:NumOfAgents 
+        for conf = 1:NumOfConf
+            if (mat(agent,conf)==1)
+                fprintf('agent %d is assigned to targets:',agent);
+                for trgt = 1:NumOfTargets
+                    if (configurations(trgt,conf) == 1) 
+                        fprintf(' %d ',trgt);
+                    end
+                end
+                fprintf('\n');
+            end
+        end
+    end
+    fprintf('opt val = %10.10f\n',res);
     
     
     

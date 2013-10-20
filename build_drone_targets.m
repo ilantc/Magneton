@@ -1,4 +1,4 @@
-function [ drone_targets ] = build_drone_targets( drone_sensor,targets)
+function [ drone_targets ] = build_drone_targets( targets,drone_sensor)
     N=size(drone_sensor,1);
     T=size(targets,1);
     drone_targets=ones(N,T);    
