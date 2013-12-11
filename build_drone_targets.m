@@ -1,4 +1,9 @@
-function [ drone_targets ] = build_drone_targets( targets,drone_sensor)
+function [ drone_targets ] = build_drone_targets( targets,drone_sensor,verbose)
+
+    if (verbose) 
+        fprintf('\nentered build_drone_targets');
+    end
+
     N=size(drone_sensor,1);
     T=size(targets,1);
     drone_targets=ones(N,T);    

@@ -19,6 +19,10 @@ function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     % since lp_solve can't accept a matrix in its objective function, we
     % will flatten the matrix to an array (i.e. x(i,j) = x[i*n + j]
     
+    if (verbose) 
+        fprintf('\nentered run_LP_solve');
+    end
+    
     % some required variables 
     NumOfAgents     = size(agent2conf,1);
     NumOfConf       = size(agent2conf,2);
