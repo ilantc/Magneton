@@ -13,7 +13,7 @@ function [ allConfigurations ] = buildConfigurationsPerDrone(currConf, timeLeft,
 
         % get all rows with start time > curr time
         currRows = ((targetsData(:,END_COL)-targetsData(:,DURATION_COL) >= currTime) & ( (targetsData(:,DURATION_COL) + max(currTime,targetsData(:,BEGIN_COL)) - currTime) <= timeLeft) );
-
+        
         % remove conf that already exist in currConf
         currRows = currRows & (~ currConf);
 
