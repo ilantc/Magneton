@@ -1,4 +1,4 @@
-function [ allConfigurations ] = buildAllConfigurations(currConf, timeLeft,currTime )
+function [ allConfigurations ] = buildConfigurationsPerDrone(currConf, timeLeft,currTime )
     
     % targetsData col values
     ID_COL          =1;
@@ -27,7 +27,7 @@ function [ allConfigurations ] = buildAllConfigurations(currConf, timeLeft,currT
             currStart = max(currTime,targetsData(i,BEGIN_COL));
             newFinish = currStart + targetsData(i,DURATION_COL);
             newTimeLeft = timeLeft - (newFinish - currTime);
-            allConfigurations = [allConfigurations, buildAllConfigurations(currConfig,newTimeLeft,newFinish)];
+            allConfigurations = [allConfigurations, buildConfigurationsPerDrone(currConfig,newTimeLeft,newFinish)];
         end
         allConfigurations = [allConfigurations , currConf];
     end
