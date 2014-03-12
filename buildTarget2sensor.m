@@ -4,14 +4,14 @@ function [ target2sensor ] = buildTarget2sensor( infile )
     
     
     MissionType2Sensor  = xlsread(infile,'GeneralData2');
-    numOfSensors = size(MissionType2Sensor,2);
-    target2MissionType      = xlsread(infile,'InMissions');
+    numOfSensors        = size(MissionType2Sensor,2);
+    target2MissionType  = xlsread(infile,'InMissions');
    
     % get only the relevant cols, id2type
     target2MissionType = target2MissionType(:,1:2);
     numOfTargets = size(target2MissionType,1);
     
-    % build droneId2sensor
+    % build target2sensor
     target2sensor = zeros(numOfTargets,numOfSensors);
     for i=1:numOfTargets
         targetId   = target2MissionType(i,1);
