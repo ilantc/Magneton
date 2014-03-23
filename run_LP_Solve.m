@@ -6,7 +6,7 @@
 %           confVal       - vector of configuration valus
 %           verbose       - tell me more...
 
-function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
+function [lp,outConf] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     
     % constraints - every target has at most one agent assigned to it =>
     %               #rows(configuration) constraints
@@ -75,17 +75,20 @@ function [lp] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     mat = reshape(mat,[NumOfConf,NumOfAgents])';
     configurations = full(configurations);
     
-    fprintf('\n\n\n######## results ########\n');
+    outConf = zeros(NumOfTargets,NumOfAgents);
+    
+    %fprintf('\n\n\n######## results ########\n');
     for agent = 1:NumOfAgents 
         for conf = 1:NumOfConf
             if (mat(agent,conf)==1)
-                fprintf('agent %d is assigned to targets:',agent);
+               %fprintf('agent %d is assigned to targets:',agent);
                 for trgt = 1:NumOfTargets
                     if (configurations(trgt,conf) == 1) 
-                        fprintf(' %d ',trgt);
+                        outConf(trgt,agent) = 1;
+                        %fprintf(' %d ',trgt);
                     end
                 end
-                fprintf('\n');
+                %fprintf('\n');
             end
         end
     end
