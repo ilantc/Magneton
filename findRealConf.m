@@ -1,5 +1,6 @@
-function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,currFinish,maxFinish)
+function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,currFinish,maxFinish, lastTargetVisited,speed,v)
     
+    global target2TargetDistance;
     ID_COL          =1;
     BEGIN_COL       =4;
     END_COL         =5;
@@ -20,15 +21,24 @@ function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,cu
         % if this one is already in the conf, skip it
         if (size(currWasScheduled,1) == 0) 
             % check if can schedule it next
-            duration = sortedTargetsData(i,DURATION_COL);
-            start    = max(currFinish,sortedTargetsData(i,BEGIN_COL));
-            finish   = start + duration;
-            if ((finish <= maxFinish) && (finish <= sortedTargetsData(i,END_COL)) )
+            duration    = sortedTargetsData(i,DURATION_COL);
+            flightTime  = (target2TargetDistance(lastTargetVisited,currID + 1)/(speed*60*60));
+            start       = max(currFinish + flightTime,sortedTargetsData(i,BEGIN_COL));
+            finish      = start + duration;
+          %  duration
+          %  flightTime
+          %  start
+          %  finish
+          if (v) 
+              fprintf('dur = %10.2d, start = %10.2d, finish = %10.2d\n',duration,start,finish);
+              fprintf('maxFinish = %10.2d, win_end = %10.2d, target = %10.2d\n',maxFinish,sortedTargetsData(i,END_COL),currID);
+             % currRealConf
+          end
+            if ((finish <= maxFinish + 0.01) && (finish <= sortedTargetsData(i,END_COL) + 0.01) )
                 % add this row, and call the recursive function again
-                currRow = sortedTargetsData(sortedTargetsData(:,ID_COL) == currID,:);
                 tempCurrRealConf = currRealConf;
                 tempCurrRealConf(currConfSize + 1,:) = [currID,start,finish];
-                foundConf = findRealConf(sortedTargetsData,tempCurrRealConf,currConfSize + 1,finish,maxFinish);
+                foundConf = findRealConf(sortedTargetsData,tempCurrRealConf,currConfSize + 1,finish,maxFinish,currID + 1,speed,v);
                 % if found conf is not good, continue, else - return it
                 if (size(foundConf,1) > 0 )
                     RealConf = foundConf;

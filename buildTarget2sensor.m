@@ -1,9 +1,9 @@
-function [ target2sensor ] = buildTarget2sensor( infile )
+function [ target2sensor ] = buildTarget2sensor( infile, MissionType2Sensor )
 %UNTITLED Summary of this function goes here
 %   Detailed explanation goes here
     
     
-    MissionType2Sensor  = xlsread(infile,'GeneralData2');
+    %MissionType2Sensor  = xlsread(infile,'GeneralData2');
     numOfSensors        = size(MissionType2Sensor,2);
     target2MissionType  = xlsread(infile,'InMissions');
    

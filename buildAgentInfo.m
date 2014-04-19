@@ -1,15 +1,16 @@
-function [ AgentInfo ] = buildAgentInfo(infile)
+function [ AgentInfo ] = buildAgentInfo(infile, UAVTypeDur)
     % build all the configurations per each drone
     % we need to get the takeoff time and the flight time
-    % output is UAVID to [takeoffTime, flightTime]
+    % output is UAVID to [takeoffTime, flightTime, speed]
 
     UAVTakeoff   = xlsread(infile,'InFlights');
-    UAVTypeDur   = xlsread(infile,'GeneralData1');
+    %UAVTypeDur   = xlsread(infile,'GeneralData1')
     UAV2UAVType  = xlsread(infile,'InUAVState');
 
     % targetsData col values
-    UAVTypeDur_UAV_ID_COL       = 1;
+    UAVTypeDur_UAV_TYPE_COL     = 1;
     UAVTypeDur_UAV_DUR_COL      = 2;
+    UAVTypeDur_UAV_SPEED_COL    = 4;
     UAVTakeoff_UAV_ID_COL       = 2;
     UAVTakeoff_UAV_TAKEOFF_COL  = 4;
     UAV2UAVType_UAV_ID_COL      = 1;
@@ -24,11 +25,15 @@ function [ AgentInfo ] = buildAgentInfo(infile)
         % get the UAV TYPE
         currType        = UAV2UAVType(UAV2UAVType(:,UAV2UAVType_UAV_ID_COL) == currID,UAV2UAVType_UAV_TYPE_COL);
         % get the flight time
-        flightTime      = UAVTypeDur(UAVTypeDur(:,UAVTypeDur_UAV_ID_COL)==currType,UAVTypeDur_UAV_DUR_COL);
+        flightTime      = UAVTypeDur(UAVTypeDur(:,UAVTypeDur_UAV_TYPE_COL)==currType,UAVTypeDur_UAV_DUR_COL);
+        % get speed
+        speed           = UAVTypeDur(UAVTypeDur(:,UAVTypeDur_UAV_TYPE_COL)==currType,UAVTypeDur_UAV_SPEED_COL);
         % log the data
         AgentInfo(i,1)  = UAVTakeoff( UAVTakeoff(:,UAVTakeoff_UAV_ID_COL) == currID , UAVTakeoff_UAV_TAKEOFF_COL );
         AgentInfo(i,2)  = flightTime;
-        fprintf('i=%d,ID=%d, type=%d, flightTime=%d, toTime=%d\n',i,currID,currType,flightTime,AgentInfo(i,1));
+        AgentInfo(i,3)  = speed;
+        AgentInfo(i,4)  = currID;
+        %fprintf('i=%d,ID=%d, type=%d, flightTime=%d, toTime=%d\n',i,currID,currType,flightTime,AgentInfo(i,1));
     end
 end    
 

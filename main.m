@@ -1,10 +1,13 @@
-function [lp,outConf,AgentInfo] = main(file)
-    
-    tic;
-    % parse the input file
-    [ Agent2sensor,target2sensor, AgentInfo, target2Val ] = ParseInfile( file );
+function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor] = main(file)
     
     global targetsData;
+    global Agent2target;
+    global target2TargetDistance;
+
+    tic;
+    % parse the input file
+    [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
+    Agent2target = Agent2sensor * target2sensor';
     targetsData  = xlsread(file,'InMissions');
     numOfTargets = size(target2sensor,1);
     numOfDrones  = size(AgentInfo,1);
@@ -17,13 +20,14 @@ function [lp,outConf,AgentInfo] = main(file)
     tic;
     % build the configuration per drone
     for (drone = 1 : numOfDrones) 
-        currConfs  = buildConfigurationsPerDrone(zeros(numOfTargets,1), AgentInfo(drone,2),AgentInfo(drone,1) );
+        currConfs  = buildConfigurationsPerDrone(zeros(numOfTargets,1), AgentInfo(drone,2),AgentInfo(drone,1),AgentInfo(drone,3) ,AgentInfo(drone,4), 1 ,0);
         currConfs  = unique(currConfs', 'rows');
         currConfs  = currConfs';
         allConfigurations = [allConfigurations currConfs];
         currAgent2conf = zeros(numOfDrones,size(currConfs,2));
         currAgent2conf(drone,:) = ones(1,size(currConfs,2));
         agent2conf = [agent2conf currAgent2conf];
+        fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     
 
@@ -40,9 +44,29 @@ function [lp,outConf,AgentInfo] = main(file)
     fprintf('Done running lp ');
     toc;
     AllConf = zeros(0,4);
+    excelOut = zeros(0,5);
     for i=1:size(outConf,2)
-        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2));
-        AllConf = [AllConf ; (ones(size(currConf,1),1) * i) currConf];
+        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0);
+        if (size(currConf,1) > 0) 
+            AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,4)) currConf];
+            % build the excel output
+            % best payload for the first mission
+            compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(1,1),:);
+            bestPayload = find(compatible==max(compatible));
+            excelOut = [excelOut ; i currConf(1,1) bestPayload currConf(1,2:3)];
+            for j=2:size(currConf,1)
+                % if there is a gap - insert a "0" mission
+                currFinish = excelOut(size(excelOut,1),5);
+                newStart   = currConf(j,2);
+                if (currFinish < (newStart - 0.001)) 
+                    fprintf('entered if\n');
+                    excelOut = [excelOut ; i 0 0 currFinish newStart];
+                end
+                compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(j,1),:);
+                bestPayload = find(compatible == max(compatible));
+                excelOut = [excelOut ; i currConf(j,1) bestPayload currConf(j,2:3)];
+            end
+        end
     end
 
     col_w = 11;  % Fixed column width in characters
@@ -54,6 +78,7 @@ function [lp,outConf,AgentInfo] = main(file)
     % Print values
     data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf(data_fmt, AllConf')
+    xlswrite(file,excelOut,'OutAssignment','A3');
     
     
     
