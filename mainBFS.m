@@ -1,9 +1,10 @@
-function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor] = main(file)
+function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor] = mainBFS(file)
     
     global targetsData;
     global Agent2target;
     global target2TargetDistance;
-
+    amountForBuild = 1000;
+    finalAmount = 50;
     tic;
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
@@ -20,13 +21,30 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     tic;
     % build the configuration per drone
     for (drone = 1 : numOfDrones) 
-        currConfs  = buildConfigurationsPerDrone(zeros(numOfTargets,1), AgentInfo(drone,2),AgentInfo(drone,1),AgentInfo(drone,3) ,AgentInfo(drone,4), 1 ,0);
-        currConfs  = unique(currConfs', 'rows');
-        currConfs  = currConfs';
-        allConfigurations = [allConfigurations currConfs];
-        currAgent2conf = zeros(numOfDrones,size(currConfs,2));
-        currAgent2conf(drone,:) = ones(1,size(currConfs,2));
+        %fprintf('calculating confs for drone %i of %i (agentID is %i)\n',drone,numOfDrones,AgentInfo(drone,4));
+        agentFlightTime = AgentInfo(drone,2);
+        agentTakeoffTime = AgentInfo(drone,1);
+        speed = AgentInfo(drone,3);
+        agentID = AgentInfo(drone,4);
+        currConfs = zeros(numOfTargets,1);
+        allAgentConfs = currConfs;
+        for confSize=1:12
+            %fprintf('\tconf size %i\n',confSize - 1);
+            if (size(currConfs,2) > 0 )
+                [currConfs,confsForRun]  = buildConfigurationsPerDroneBFS(currConfs,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
+                % trim top 10k from currConfs here (or inisde the builder
+                % function)
+                BinaryConfsForRun = confsForRun>0;
+                % trim top 1k from binary confs here!
+                BinaryConfsForRun  = unique(BinaryConfsForRun', 'rows');
+                BinaryConfsForRun  = BinaryConfsForRun';
+                allAgentConfs = [allAgentConfs BinaryConfsForRun];
+            end
+        end 
+        currAgent2conf = zeros(numOfDrones,size(allAgentConfs,2));
+        currAgent2conf(drone,:) = ones(1,size(allAgentConfs,2));
         agent2conf = [agent2conf currAgent2conf];
+        allConfigurations = [allConfigurations allAgentConfs];
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     

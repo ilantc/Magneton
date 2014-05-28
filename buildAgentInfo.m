@@ -3,7 +3,7 @@ function [ AgentInfo ] = buildAgentInfo(infile, UAVTypeDur)
     % we need to get the takeoff time and the flight time
     % output is UAVID to [takeoffTime, flightTime, speed]
 
-    UAVTakeoff   = xlsread(infile,'InFlights');
+    UAVTakeoff   = xlsread(infile,'FinalFlights');
     %UAVTypeDur   = xlsread(infile,'GeneralData1')
     UAV2UAVType  = xlsread(infile,'InUAVState');
 
@@ -31,7 +31,7 @@ function [ AgentInfo ] = buildAgentInfo(infile, UAVTypeDur)
         % log the data
         AgentInfo(i,1)  = UAVTakeoff( UAVTakeoff(:,UAVTakeoff_UAV_ID_COL) == currID , UAVTakeoff_UAV_TAKEOFF_COL );
         AgentInfo(i,2)  = flightTime;
-        AgentInfo(i,3)  = speed;
+        AgentInfo(i,3)  = speed / 1000;
         AgentInfo(i,4)  = currID;
         %fprintf('i=%d,ID=%d, type=%d, flightTime=%d, toTime=%d\n',i,currID,currType,flightTime,AgentInfo(i,1));
     end

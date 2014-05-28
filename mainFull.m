@@ -19,10 +19,13 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     toc;
     tic;
     % build the configuration per drone
+    allConfs = RunSchedulAssignment(file);
     for (drone = 1 : numOfDrones) 
-        currConfs  = buildConfigurationsPerDrone(zeros(numOfTargets,1), AgentInfo(drone,2),AgentInfo(drone,1),AgentInfo(drone,3) ,AgentInfo(drone,4), 1 ,0);
-        currConfs  = unique(currConfs', 'rows');
-        currConfs  = currConfs';
+        % convert to matrix format
+        currConfs = getConfMatrix(allConfs(drone).goodOptions2,numOfTargets);
+        currConfs = [currConfs getConfMatrix(allConfs(drone).goodOptions3,numOfTargets)];
+        currConfs = [currConfs getConfMatrix(allConfs(drone).goodOptions4,numOfTargets)];
+        currConfs = [currConfs getConfMatrix(allConfs(drone).goodOptions5,numOfTargets)];
         allConfigurations = [allConfigurations currConfs];
         currAgent2conf = zeros(numOfDrones,size(currConfs,2));
         currAgent2conf(drone,:) = ones(1,size(currConfs,2));
@@ -53,17 +56,17 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
             % best payload for the first mission
             compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(1,1),:);
             bestPayload = find(compatible==max(compatible));
-            excelOut = [excelOut ; AgentInfo(i,4) currConf(1,1) bestPayload currConf(1,2:3)];
+            excelOut = [excelOut ; i currConf(1,1) bestPayload currConf(1,2:3)];
             for j=2:size(currConf,1)
                 % if there is a gap - insert a "0" mission
                 currFinish = excelOut(size(excelOut,1),5);
                 newStart   = currConf(j,2);
                 if (currFinish < (newStart - 0.001)) 
-                    excelOut = [excelOut ; AgentInfo(i,4) 0 0 currFinish newStart];
+                    excelOut = [excelOut ; i 0 0 currFinish newStart];
                 end
                 compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(j,1),:);
                 bestPayload = find(compatible == max(compatible));
-                excelOut = [excelOut ; AgentInfo(i,4) currConf(j,1) bestPayload currConf(j,2:3)];
+                excelOut = [excelOut ; i currConf(j,1) bestPayload currConf(j,2:3)];
             end
         end
     end
@@ -77,7 +80,7 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     % Print values
     data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf(data_fmt, AllConf')
-    xlswrite(file,excelOut,'OutAssignment','A3');
+    %xlswrite(file,excelOut,'OutAssignment','A3');
     
     
     

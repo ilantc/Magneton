@@ -31,8 +31,9 @@ function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v)
         stepRealRow = targetsData(targetsData(:,ID_COL) == stepMinID,:);
         sortedTargetsData(step,:) = stepRealRow;
     end
-    % output => col1 = targetID, col2 = start time, col3 = end time
-    realConf = findRealConf(sortedTargetsData,zeros(confSize,3),0,takeoffTime,takeoffTime + flightTime,1,speed,v);
+    % output => col1 = targetID, col2 = start time, col3 = end time col4 =
+    % val
+    realConf = findRealConf(sortedTargetsData,zeros(confSize,4),0,takeoffTime,takeoffTime + flightTime,1,speed,v);
 end
        
        

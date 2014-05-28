@@ -2,6 +2,7 @@ function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,cu
     
     global target2TargetDistance;
     ID_COL          =1;
+    VAL_COL         =3;
     BEGIN_COL       =4;
     END_COL         =5;
     DURATION_COL    =6;
@@ -25,6 +26,8 @@ function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,cu
             flightTime  = (target2TargetDistance(lastTargetVisited,currID + 1)/(speed*60*60));
             start       = max(currFinish + flightTime,sortedTargetsData(i,BEGIN_COL));
             finish      = start + duration;
+            val         = sortedTargetsData(i,VAL_COL);
+            val = 8- val;
           %  duration
           %  flightTime
           %  start
@@ -37,7 +40,7 @@ function[RealConf] = findRealConf(sortedTargetsData,currRealConf,currConfSize,cu
             if ((finish <= maxFinish + 0.01) && (finish <= sortedTargetsData(i,END_COL) + 0.01) )
                 % add this row, and call the recursive function again
                 tempCurrRealConf = currRealConf;
-                tempCurrRealConf(currConfSize + 1,:) = [currID,start,finish];
+                tempCurrRealConf(currConfSize + 1,:) = [currID,start,finish,val];
                 foundConf = findRealConf(sortedTargetsData,tempCurrRealConf,currConfSize + 1,finish,maxFinish,currID + 1,speed,v);
                 % if found conf is not good, continue, else - return it
                 if (size(foundConf,1) > 0 )
