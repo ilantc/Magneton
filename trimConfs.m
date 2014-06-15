@@ -1,10 +1,5 @@
-function [allConfigurationsForBuild,allConfigurationsForRun] = trimConfs(allConfigurations,target2Val,amountForBuild,finalAmount)
+function [allConfigurationsForBuild,allConfigurationsForRun,allValsOutput] = trimConfs(allConfigurations,target2Val,amountForBuild,finalAmount)
     confNum = size(allConfigurations,2);
-    if ( (confNum <= amountForBuild) && (confNum <= finalAmount)  )
-        allConfigurationsForBuild = allConfigurations;
-        allConfigurationsForRun = allConfigurations;
-        return 
-    end
     %% first bucket all the values
     allValues = zeros(0,4); % first col = val, 2nd col = amount
                             % 3rd col = amound for amountForBuild
@@ -39,6 +34,18 @@ function [allConfigurationsForBuild,allConfigurationsForRun] = trimConfs(allConf
             allValues(valIndex,4) = allValues(valIndex,2);
         end
     end
+    
+    % output for statistics 
+    allValsOutput = allValues;
+    
+    % this block should move up to row 3 for performence, it is only here
+    % for stats
+    if ( (confNum <= amountForBuild) && (confNum <= finalAmount)  )
+        allConfigurationsForBuild = allConfigurations;
+        allConfigurationsForRun = allConfigurations;
+        return 
+    end
+    
     buildConfs = zeros(1,confNum);
     finalConfs = zeros(1,confNum);
     % find top picks for both params

@@ -1,4 +1,4 @@
-function [ allConfigurationsForBuild,allConfigurationsForRun ] = buildConfigurationsPerDroneBFS(lastLevelConfs,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,amountForBuild,finalAmount)
+function [ allConfigurationsForBuild,allConfigurationsForRun,confStat] = buildConfigurationsPerDroneBFS(lastLevelConfs,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,amountForBuild,finalAmount)
     %% for all confs in lastLevelConfs - try to add an additional task to
     %% it
     
@@ -14,7 +14,7 @@ function [ allConfigurationsForBuild,allConfigurationsForRun ] = buildConfigurat
     % global data for this function, derived from input
     numTargets = size(lastLevelConfs,1);
     oldConfSize = sum(lastLevelConfs(:,1) ~= 0);
-    %fprintf('\t\tconf size %i, num of confs is %i\n',oldConfSize,size(lastLevelConfs,2));
+    fprintf('\t\tconf size %i, num of confs is %i\n',oldConfSize,size(lastLevelConfs,2));
     % output
     allConfigurations = zeros(numTargets,0);
     
@@ -75,9 +75,10 @@ function [ allConfigurationsForBuild,allConfigurationsForRun ] = buildConfigurat
         end
     end
     if (size(allConfigurations,2) > 0 )
-        [allConfigurationsForBuild,allConfigurationsForRun] = trimConfs(allConfigurations,target2Val,amountForBuild,finalAmount);
+        [allConfigurationsForBuild,allConfigurationsForRun,confStat] = trimConfs(allConfigurations,target2Val,amountForBuild,finalAmount);
     else
         allConfigurationsForBuild = allConfigurations;
         allConfigurationsForRun = allConfigurations;
+        confStat = [];
     end
 end

@@ -1,10 +1,10 @@
-function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor] = mainBFS(file)
+function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,allStat] = mainBFS(file,buildAmount,runAmount)
     
     global targetsData;
     global Agent2target;
     global target2TargetDistance;
-    amountForBuild = 1000;
-    finalAmount = 50;
+    amountForBuild = buildAmount;
+    finalAmount = runAmount;
     tic;
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
@@ -16,9 +16,13 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     allConfigurations = zeros(0,numOfTargets);
     agent2conf        = zeros(numOfDrones,0);
     
+    sumAllVals = sum(target2Val);
+    fprintf('total value = %d\n',sumAllVals);
+    
     fprintf('Done parsing infile ');
     toc;
     tic;
+    allStat = {};
     % build the configuration per drone
     for (drone = 1 : numOfDrones) 
         %fprintf('calculating confs for drone %i of %i (agentID is %i)\n',drone,numOfDrones,AgentInfo(drone,4));
@@ -28,10 +32,14 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
         agentID = AgentInfo(drone,4);
         currConfs = zeros(numOfTargets,1);
         allAgentConfs = currConfs;
+        droneStat = {};
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
-                [currConfs,confsForRun]  = buildConfigurationsPerDroneBFS(currConfs,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
+                tic;
+                [currConfs,confsForRun,confStat]  = buildConfigurationsPerDroneBFS(currConfs,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
+                droneStat.(sprintf('conf%d',confSize)).stat = confStat;
+                droneStat.(sprintf('conf%d',confSize)).time = toc;
                 % trim top 10k from currConfs here (or inisde the builder
                 % function)
                 BinaryConfsForRun = confsForRun>0;
@@ -45,6 +53,7 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
         currAgent2conf(drone,:) = ones(1,size(allAgentConfs,2));
         agent2conf = [agent2conf currAgent2conf];
         allConfigurations = [allConfigurations allAgentConfs];
+        allStat.(sprintf('drone%d',drone)) = droneStat;
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     
