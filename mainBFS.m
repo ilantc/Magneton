@@ -5,7 +5,7 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     global target2TargetDistance;
     amountForBuild = buildAmount;
     finalAmount = runAmount;
-    tic;
+    parsingTime = tic;
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
     Agent2target = Agent2sensor * target2sensor';
@@ -20,8 +20,8 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     fprintf('total value = %d\n',sumAllVals);
     
     fprintf('Done parsing infile ');
-    toc;
-    tic;
+    toc(parsingTime)
+    confBuildingTime = tic;
     allStat = {};
     % build the configuration per drone
     for (drone = 1 : numOfDrones) 
@@ -36,10 +36,10 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
-                tic;
+                confBuildTime = tic;
                 [currConfs,confsForRun,confStat]  = buildConfigurationsPerDroneBFS(currConfs,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
-                droneStat.(sprintf('conf%d',confSize)).time = toc;
+                droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder
                 % function)
                 BinaryConfsForRun = confsForRun>0;
@@ -65,11 +65,11 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     fprintf('the number of unique confs is: %d\n',size(b,1));
     
     fprintf('Done building Confs ');
-    toc;
-    tic;
+    toc(confBuildingTime)
+    lpSolveTime = tic;
     [lp,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
     fprintf('Done running lp ');
-    toc;
+    toc(lpSolveTime)
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
