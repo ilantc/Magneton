@@ -67,6 +67,12 @@ function [lp,outConf] = run_LP_Solve(configurations,agent2conf,confVal,verbose)
     for i=1:NumOfVariables
         mxlpsolve('set_binary',lp,i,1);
     end
+    
+    % adding timeout constraints
+    % mxlpsolve('set_timeout', lp, 1200);
+    % mxlpsolve('set_break_at_first', lp, 1)
+    % mxlpsolve('set_obj_bound', lp, 130);
+    mxlpsolve('set_print_sol',lp, 2);
     mxlpsolve('write_lp', lp, 'debug.lp');
     mxlpsolve('solve', lp);
     

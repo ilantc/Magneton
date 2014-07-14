@@ -1,4 +1,4 @@
-function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,allStat] = mainBFS(file,buildAmount,runAmount)
+function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,allStat] = mainBFS(file,buildAmount,runAmount)
     
     global targetsData;
     global Agent2target;
@@ -56,19 +56,66 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
         allStat.(sprintf('drone%d',drone)) = droneStat;
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
+    fprintf('Done building Confs ');
+    toc(confBuildingTime)
     
-
-    confVal = target2Val' * allConfigurations;
-    
-    fprintf('the number of confs is: %d\n',size(allConfigurations,2));
+    fprintf('the number of confs before removing non uniques is: %d\n',size(allConfigurations,2));
     b = unique(allConfigurations', 'rows');
     fprintf('the number of unique confs is: %d\n',size(b,1));
     
-    fprintf('Done building Confs ');
-    toc(confBuildingTime)
+    %%%%%%%%%%%%
+    % removing duplicate confs
+    myDupRemovalTime = tic;
+    [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
+    allConfigurationsU = allConfigurationsU';
+    agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
+    for i=1:max(Iu)
+        % a col vector which indicates which agent can perform this conf
+        currA2C = sum(agent2conf(:,Iu == i),2);
+        agent2confU(:,i) = currA2C;
+    end
+    fprintf('Done removing duplicates ');
+    toc(myDupRemovalTime)
+    %%%%%%%%%%%%
+    
+    
+    % removing duplicate confs
+    % dupRemovalTime = tic;
+    % allConfigurationsU = allConfigurations(:,1);
+    % agent2confU        = agent2conf(:,1);
+    
+    % for i=2:size(allConfigurations,2)
+    %     isU = 1;
+    %    for j=1:size(allConfigurationsU,2)
+    %         if allConfigurations(:,i) == allConfigurationsU(:,j)
+    %             agent2confU(:,j) = agent2confU(:,j) + agent2conf(:,i);
+    %             isU = 0;
+    %             break;
+    %         end
+    %     end
+    %     if isU == 1
+    %         allConfigurationsU = [allConfigurationsU,allConfigurations(:,i)];
+    %         agent2confU = [agent2confU,agent2conf(:,i)];
+    %     end
+    % end
+    % fprintf('Done removing duplicates ');
+    % toc(dupRemovalTime);
+    fprintf('the number of confs after removing non uniques is: %d\n',size(allConfigurationsU,2));
+    agent2conf = agent2confU;
+    allConfigurations = allConfigurationsU;
+    
+    confVal = target2Val' * allConfigurations;
+    
+    %model = 0;
+    %outConf = 0;
+    %AllConf = 0;
+    %excelOut= 0;
+    %return;
+    
     lpSolveTime = tic;
-    [lp,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
-    fprintf('Done running lp ');
+    %[model,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
+    [model,outConf] = run_gurobi(allConfigurations,agent2conf,confVal,0);
+    fprintf('Done running solver ');
     toc(lpSolveTime)
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
@@ -104,7 +151,7 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     % Print values
     data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf(data_fmt, AllConf')
-    xlswrite(file,excelOut,'OutAssignment','A3');
+    %xlswrite(file,excelOut,'OutAssignment','A3');
     
     
     
