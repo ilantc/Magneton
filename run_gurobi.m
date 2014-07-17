@@ -6,7 +6,7 @@
 %           confVal       - vector of configuration valus
 %           verbose       - tell me more...
 
-function [result,outConf] = run_gurobi(configurations,agent2conf,confVal,verbose)
+function [result,outConf,res] = run_gurobi(configurations,agent2conf,confVal,verbose)
     
     % constraints - every target has at most one agent assigned to it =>
     %               #rows(configuration) constraints
@@ -71,7 +71,6 @@ function [result,outConf] = run_gurobi(configurations,agent2conf,confVal,verbose
     row         = reshape(agent2conf',[1,NumOfVariables]);
     row         = row -1;
     row         = row * (-1);
-    leftSide    = 0;
     A = [A ; row];
     b = [b ; 0];
     
@@ -80,21 +79,16 @@ function [result,outConf] = run_gurobi(configurations,agent2conf,confVal,verbose
     model.rhs = b;
     model.sense = '<';
     
-    % addign bounds
+    % assign bounds
     model.lb = zeros(NumOfVariables,1);
     model.ub = ones(NumOfVariables,1);
+    
+    % output file for temp memory usage
+    model.NodefileStart = 2.0;
     
     % solve!
     params.outputflag = 1;
     result = gurobi(model, params);
-    
-    % adding timeout constraints
-    % mxlpsolve('set_timeout', lp, 1200);
-    % mxlpsolve('set_break_at_first', lp, 1)
-    % mxlpsolve('set_obj_bound', lp, 130);
-    % mxlpsolve('set_print_sol',lp, 2);
-    % mxlpsolve('write_lp', lp, 'debug.lp');
-    % mxlpsolve('solve', lp);
     
     res = result.objval;
     mat = result.x;

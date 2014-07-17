@@ -21,7 +21,7 @@ function [allConfigurationsForBuild,allConfigurationsForRun,allValsOutput] = tri
     
     % determine how many from each bucket for each 
     aggregatedTotal = 0;
-    for valIndex=1:size(allValues,1)
+    for valIndex=size(allValues,1):-1:1
         aggregatedTotal = aggregatedTotal + allValues(valIndex,2);
         if (aggregatedTotal > amountForBuild)
             allValues(valIndex,3) = allValues(valIndex,2) - (aggregatedTotal - amountForBuild); % how many we have minus overflow

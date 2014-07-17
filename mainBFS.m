@@ -19,8 +19,8 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     sumAllVals = sum(target2Val);
     fprintf('total value = %d\n',sumAllVals);
     
-    fprintf('Done parsing infile ');
-    toc(parsingTime)
+    parsingTime = toc(parsingTime);
+    fprintf('Done parsing infile, elapsed time %f\n',parsingTime);
     confBuildingTime = tic;
     allStat = {};
     % build the configuration per drone
@@ -57,7 +57,8 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     fprintf('Done building Confs ');
-    toc(confBuildingTime)
+    confBuildingTime = toc(confBuildingTime);
+    fprintf('Done building Confs, elapsed time %f\n',confBuildingTime);
     
     fprintf('the number of confs before removing non uniques is: %d\n',size(allConfigurations,2));
     b = unique(allConfigurations', 'rows');
@@ -65,7 +66,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     
     %%%%%%%%%%%%
     % removing duplicate confs
-    myDupRemovalTime = tic;
+    dupRemovalTime = tic;
     [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
     allConfigurationsU = allConfigurationsU';
     agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
@@ -74,32 +75,9 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         currA2C = sum(agent2conf(:,Iu == i),2);
         agent2confU(:,i) = currA2C;
     end
-    fprintf('Done removing duplicates ');
-    toc(myDupRemovalTime)
-    %%%%%%%%%%%%
+    dupRemovalTime = toc(dupRemovalTime);
+    fprintf('Done removing duplicates, elapsed time %f\n',dupRemovalTime);
     
-    
-    % removing duplicate confs
-    % dupRemovalTime = tic;
-    % allConfigurationsU = allConfigurations(:,1);
-    % agent2confU        = agent2conf(:,1);
-    
-    % for i=2:size(allConfigurations,2)
-    %     isU = 1;
-    %    for j=1:size(allConfigurationsU,2)
-    %         if allConfigurations(:,i) == allConfigurationsU(:,j)
-    %             agent2confU(:,j) = agent2confU(:,j) + agent2conf(:,i);
-    %             isU = 0;
-    %             break;
-    %         end
-    %     end
-    %     if isU == 1
-    %         allConfigurationsU = [allConfigurationsU,allConfigurations(:,i)];
-    %         agent2confU = [agent2confU,agent2conf(:,i)];
-    %     end
-    % end
-    % fprintf('Done removing duplicates ');
-    % toc(dupRemovalTime);
     fprintf('the number of confs after removing non uniques is: %d\n',size(allConfigurationsU,2));
     agent2conf = agent2confU;
     allConfigurations = allConfigurationsU;
@@ -112,11 +90,11 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     %excelOut= 0;
     %return;
     
-    lpSolveTime = tic;
+    solverTime = tic;
     %[model,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
-    [model,outConf] = run_gurobi(allConfigurations,agent2conf,confVal,0);
-    fprintf('Done running solver ');
-    toc(lpSolveTime)
+    [model,outConf,optVal] = run_gurobi(allConfigurations,agent2conf,confVal,0);
+    solverTime = toc(solverTime);
+    fprintf('Done running solver, elapsed time %f\n',solverTime);
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
@@ -153,16 +131,14 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     fprintf(data_fmt, AllConf')
     %xlswrite(file,excelOut,'OutAssignment','A3');
     
+    % save stat
+    allStat.val = optVal;
+    allStat.runParam = runAmount;
+    allStat.buildParam = buildAmount;
+    allStat.solverTime = solverTime;
+    allStat.confBuildTime = confBuildingTime;
+    allStat.confDupRemovalTime = dupRemovalTime;
+    allStat.inputParsingTime = parsingTime;
+    allStat.allTargets = sumAllVals;
     
-    
-    
-    %agent2targets                   = build_drone_targets( targets,agent2sensors,verbose);
-    %allConf                         = getAllConfigurations( numOfTargets,maxNumOfTargetInConfiguration,verbose );
-    %size(allConf)
-    %verbose && xlswrite('C:\Magneton\temp.xls',allConf','temp');
-    %cleanConf                       = cleanConfigurations( allConf,targets,BEGIN_COL,END_COL,DURATION_COL,maxNumOfTargetInConfiguration,maxFlightTime,verbose);
-    %verbose && xlswrite('C:\Magneton\temp.xls',cleanConf','temp2');
-    %confVal                         = targets(:,CONF_VAL_COL)' * cleanConf;
-    %agent2conf                      = build_agent2conf( cleanConf,agent2targets,verbose);
-    %lp                              = run_LP_Solve(cleanConf,agent2conf,confVal,verbose);
 end
