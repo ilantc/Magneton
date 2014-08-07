@@ -1,4 +1,4 @@
-function [allConfigurationsForBuild,allConfigurationsForRun,allValsOutput] = trimConfs(allConfigurations,target2Val,amountForBuild,finalAmount)
+function [allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,allValsOutput] = trimConfs(allConfigurations,allConfTimes,target2Val,amountForBuild,finalAmount)
     confNum = size(allConfigurations,2);
     %% first bucket all the values
     allValues = zeros(0,4); % first col = val, 2nd col = amount
@@ -62,6 +62,7 @@ function [allConfigurationsForBuild,allConfigurationsForRun,allValsOutput] = tri
         end
     end
     allConfigurationsForBuild = allConfigurations(:,buildConfs == 1);
+    allConfTimes              = allConfTimes(:,:,buildConfs == 1);
     allConfigurationsForRun   = allConfigurations(:,finalConfs == 1);
 end
 

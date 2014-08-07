@@ -3,11 +3,13 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     global targetsData;
     global Agent2target;
     global target2TargetDistance;
+    global missionLink;
+    
     amountForBuild = buildAmount;
     finalAmount = runAmount;
     parsingTime = tic;
     % parse the input file
-    [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
+    [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance, missionLink ] = ParseInfile( file );
     Agent2target = Agent2sensor * target2sensor';
     targetsData  = xlsread(file,'InMissions');
     numOfTargets = size(target2sensor,1);
@@ -31,13 +33,14 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         speed = AgentInfo(drone,3);
         agentID = AgentInfo(drone,4);
         currConfs = zeros(numOfTargets,1);
+        confTimes = zeros(numOfTargets,2,0);
         allAgentConfs = currConfs;
         droneStat = {};
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
                 confBuildTime = tic;
-                [currConfs,confsForRun,confStat]  = buildConfigurationsPerDroneBFS(currConfs,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
+                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder

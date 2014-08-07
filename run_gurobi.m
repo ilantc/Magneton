@@ -84,8 +84,10 @@ function [result,outConf,res] = run_gurobi(configurations,agent2conf,confVal,ver
     model.ub = ones(NumOfVariables,1);
     
     % output file for temp memory usage
-    model.NodefileStart = 2.0;
-    
+    params.NodefileStart = 0.5;
+    params.NodefileDir = pwd;
+    params.Threads = 1;
+        
     % solve!
     params.outputflag = 1;
     result = gurobi(model, params);

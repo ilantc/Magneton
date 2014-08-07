@@ -1,4 +1,4 @@
-function [ Agent2sensor,target2sensor, AgentInfo,target2Val, target2TargetDistance ] = ParseInfile( infile )
+function [ Agent2sensor,target2sensor, AgentInfo,target2Val, target2TargetDistance, missionLink] = ParseInfile( infile )
     
     % parse the general data sheet 
     % TODO - take from Elbit input
@@ -22,5 +22,6 @@ function [ Agent2sensor,target2sensor, AgentInfo,target2Val, target2TargetDistan
     target2sensor         = buildTarget2sensor(infile, GenData2);
     target2Val            = buildTarget2Val(infile);
     target2TargetDistance = buildTarget2TargetDistance(infile, size(target2Val,1));
+    missionLink           = buildMissionLink(infile,size(target2Val,1));
 end
 
