@@ -55,7 +55,7 @@ function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agent
         % parallel with all the targets until the end of conf
         endOflastNonParallelableTarget = confTimes(find(currConf == oldConfSize),2);
         for t=oldConfSize:-1:1
-            if (missionLink(targetID,t) > 0)
+            if (missionLink(targetID,find(currConf == t)) == 1)
                 if (t == 1) 
                     endOflastNonParallelableTarget = confTimes(find(currConf == t),1);
                 else
