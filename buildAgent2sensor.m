@@ -3,13 +3,13 @@ function [ UAV2sensor ] = buildAgent2sensor( infile, UAVType2sensor, MissionType
 % Detailed explanation goes here
     
     
-    %MissionType2Sensor = xlsread(infile,'GeneralData2');
+    %MissionType2Sensor = read_excel_and_clean(infile,'GeneralData2');
     numOfSensors = size(MissionType2Sensor,2);
-    %UAVType2sensor = xlsread(infile,'GeneralData1');
+    %UAVType2sensor = read_excel_and_clean(infile,'GeneralData1');
     % get only the relevant cols - the type2sensor cols
     UAVType2sensor = UAVType2sensor(:,size(UAVType2sensor,2)-numOfSensors+1:size(UAVType2sensor,2));
     
-    UAV2UAVType = xlsread(infile,'InUAVState');
+    UAV2UAVType = read_excel_and_clean(infile,'InUAVState');
     numOfUAV = size(UAV2UAVType,1);
     
     % get only the relevant cols, id2type

@@ -7,7 +7,7 @@ maxNumOfOptions = 1500;
 % InFilePath = 'C:\Users\dp23489\Documents\MATLAB\Algomop\SensorsScheduler\SensorsSchedulerOut.xlsx';
 
 % Read Flight Plan From File
-[MissionsData,~] = xlsread(InFilePath,'InMissions');
+[MissionsData,~] = read_excel_and_clean(InFilePath,'InMissions');
 NumOfMissions = length(MissionsData(:,1));
 for i = 1:NumOfMissions
     M = MissionsData(i,:);
@@ -28,7 +28,7 @@ for i = 1:NumOfMissions
 end
 
 % Read Flight Plan From File
-[Flights,~] = xlsread(InFilePath,'FinalFlights');
+[Flights,~] = read_excel_and_clean(InFilePath,'FinalFlights');
 NumOfFlights = length(Flights(:,1));
 for i = 1:NumOfFlights
     F = Flights(i,:);

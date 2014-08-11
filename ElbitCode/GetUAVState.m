@@ -1,7 +1,7 @@
 function [UAVState,numOfUAVs] = GetUAVState(OutFilePath,Sheet)
 % Get UAV State 
 startIdx = 0;
-[data,text] = xlsread(OutFilePath,Sheet);
+[data,text] = read_excel_and_clean(OutFilePath,Sheet);
 numOfUAVs = sum(~isnan(data(:,1)));
 for i = 1: numOfUAVs
     UAVStateData.Name = text{startIdx+i+2,1}; % UAV Type Name (string)

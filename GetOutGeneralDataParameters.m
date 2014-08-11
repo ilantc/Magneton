@@ -1,7 +1,7 @@
 function [M2PLLink,MissionPlanConf,UAVTypeProperties]  = GetOutGeneralDataParameters(OutFilePath)
 
 % Get Out GeneralData Parameters
-[data,text] = xlsread(OutFilePath,'GeneralData');
+[data,text] = read_excel_and_clean(OutFilePath,'GeneralData');
 % Get Total Mission Plan Properties
 MissionPlanConf.TakeoffPos = [data(1,1);data(2,1)]; % Km
 MissionPlanConf.RefArea = [data(3,1:4);data(4,1:4)]; % Km

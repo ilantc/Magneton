@@ -3,9 +3,9 @@ function [ target2sensor ] = buildTarget2sensor( infile, MissionType2Sensor )
 %   Detailed explanation goes here
     
     
-    %MissionType2Sensor  = xlsread(infile,'GeneralData2');
+    %MissionType2Sensor  = read_excel_and_clean(infile,'GeneralData2');
     numOfSensors        = size(MissionType2Sensor,2);
-    target2MissionType  = xlsread(infile,'InMissions');
+    target2MissionType  = read_excel_and_clean(infile,'InMissions');
    
     % get only the relevant cols, id2type
     target2MissionType = target2MissionType(:,1:2);

@@ -1,7 +1,7 @@
 function [ missionLink ] = buildMissionLink(infile,numOfTargets)
     
     missionLink     = zeros(numOfTargets,numOfTargets);
-    missionLinkTab  = xlsread(infile,'MissionsLink');
+    missionLinkTab  = read_excel_and_clean(infile,'MissionsLink');
     missionLinkTab  = missionLinkTab(:,[1 3]);
     
     for link=1:size(missionLinkTab,1)

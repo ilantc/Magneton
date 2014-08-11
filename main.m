@@ -8,7 +8,7 @@ function [lp,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, All
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance ] = ParseInfile( file );
     Agent2target = Agent2sensor * target2sensor';
-    targetsData  = xlsread(file,'InMissions');
+    targetsData  = read_excel_and_clean(file,'InMissions');
     numOfTargets = size(target2sensor,1);
     numOfDrones  = size(AgentInfo,1);
     

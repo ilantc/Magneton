@@ -1,5 +1,5 @@
 function [out] = buildStats(files) 
-    
+    tic
     %files = {'60Missions','60Missions_2','50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'};
     files = {'50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'};
     buildParamMin = 10;
@@ -37,7 +37,7 @@ function [out] = buildStats(files)
                 j = j+1;
                 fprintf('\tIteration %d/%d\n',(((i-1)*dimBuild) + j),dimRun*dimBuild);
                 if ((currFileOut(i+1,j+1) == 0) && (runParam <= buildParam) )
-                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,allStat] = evalc('mainBFS(filename,buildParam,runParam);');
+                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,allStat] = evalc('mainBFS(filename,buildParam,runParam,0);');
                     currFileOut(i+1,j+1) = allStat.val;
                     %xlswrite('stat.xls',allStat.val,sprintf('File_%s',files{file}),sprintf('%s%i',char(65 + i),j + 1));
                     csvwrite(csvFileName,currFileOut,0,0);
@@ -46,4 +46,5 @@ function [out] = buildStats(files)
         end
         out.(sprintf('File_%s',files{file})) = currFileOut;
     end
+    toc
 end

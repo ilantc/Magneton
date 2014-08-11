@@ -1,7 +1,7 @@
 function ReadMissionSqedulerOut(OutFilePath)
 
 % Read Flight Plan From File
-[MissionsData,~] = xlsread(OutFilePath,'InMissions');
+[MissionsData,~] = read_excel_and_clean(OutFilePath,'InMissions');
 NumOfMissions = length(MissionsData(:,1));
 for i = 1:NumOfMissions
     M = MissionsData(i,:);
@@ -22,12 +22,12 @@ for i = 1:NumOfMissions
 end
 
 % Read Mission Link Table
-[MissionsLink,~] = xlsread(OutFilePath,'MissionsLink');
+[MissionsLink,~] = read_excel_and_clean(OutFilePath,'MissionsLink');
 % Range Between Missions Table
-[FlightBetweenMissionsRange,~] = xlsread(OutFilePath,'MissionsRange');
+[FlightBetweenMissionsRange,~] = read_excel_and_clean(OutFilePath,'MissionsRange');
 
 % Read Flight Plan From File
-[Flights,~] = xlsread(OutFilePath,'FinalFlights');
+[Flights,~] = read_excel_and_clean(OutFilePath,'FinalFlights');
 NumOfFlights = length(Flights(:,1));
 for i = 1:NumOfFlights
     F = Flights(i,:);
@@ -53,7 +53,7 @@ end
 
 % Option 6.b data ================
 % Read Flight Plan From File
-[InFlights,~] = xlsread(OutFilePath,'InFlights');
+[InFlights,~] = read_excel_and_clean(OutFilePath,'InFlights');
 NumOfFlights = length(InFlights(:,1));
 for i = 1:NumOfFlights
     F = InFlights(i,:);

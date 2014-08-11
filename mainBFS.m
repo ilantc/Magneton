@@ -1,4 +1,4 @@
-function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,allStat] = mainBFS(file,buildAmount,runAmount)
+function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput)
     
     global targetsData;
     global Agent2target;
@@ -11,10 +11,10 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance, missionLink ] = ParseInfile( file );
     Agent2target = Agent2sensor * target2sensor';
-    targetsData  = xlsread(file,'InMissions');
+    targetsData  = read_excel_and_clean(file,'InMissions');
     numOfTargets = size(target2sensor,1);
     numOfDrones  = size(AgentInfo,1);
-    
+
     allConfigurations = zeros(0,numOfTargets);
     agent2conf        = zeros(numOfDrones,0);
     
@@ -132,7 +132,9 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     % Print values
     data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf(data_fmt, AllConf')
-    %xlswrite(file,excelOut,'OutAssignment','A3');
+    if (writeOutput)
+        xlswrite(file,excelOut,'OutAssignment','A3');
+    end
     
     % save stat
     allStat.val = optVal;

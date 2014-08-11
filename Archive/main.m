@@ -1,7 +1,7 @@
 function [lp] = main(file,targets,agent2sensors)
     if nargin == 1 
-        targets                     = xlsread(file,'targets');
-        agent2sensors               = xlsread(file,'agent2sensors');    
+        targets                     = read_excel_and_clean(file,'targets');
+        agent2sensors               = read_excel_and_clean(file,'agent2sensors');    
     end
         
     verbose = 0;
