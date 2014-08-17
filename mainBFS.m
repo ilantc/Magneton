@@ -31,7 +31,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         agentFlightTime = AgentInfo(drone,2);
         agentTakeoffTime = AgentInfo(drone,1);
         speed = AgentInfo(drone,3);
-        agentID = AgentInfo(drone,4);
+        agentID = AgentInfo(drone,5);
         currConfs = zeros(numOfTargets,1);
         confTimes = zeros(numOfTargets,2,0);
         allAgentConfs = currConfs;
@@ -103,22 +103,22 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     for i=1:size(outConf,2)
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0);
         if (size(currConf,1) > 0) 
-            AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,4)) currConf];
+            AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
             % build the excel output
             % best payload for the first mission
-            compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(1,1),:);
+            compatible = Agent2sensor(AgentInfo(i,5),:) .* target2sensor(currConf(1,1),:);
             bestPayload = find(compatible==max(compatible));
-            excelOut = [excelOut ; AgentInfo(i,4) currConf(1,1) bestPayload currConf(1,2:3)];
+            excelOut = [excelOut ; AgentInfo(i,5) currConf(1,1) bestPayload currConf(1,2:3)];
             for j=2:size(currConf,1)
                 % if there is a gap - insert a "0" mission
                 currFinish = excelOut(size(excelOut,1),5);
                 newStart   = currConf(j,2);
                 if (currFinish < (newStart - 0.001)) 
-                    excelOut = [excelOut ; AgentInfo(i,4) 0 0 currFinish newStart];
+                    excelOut = [excelOut ; AgentInfo(i,5) 0 0 currFinish newStart];
                 end
-                compatible = Agent2sensor(AgentInfo(i,4),:) .* target2sensor(currConf(j,1),:);
+                compatible = Agent2sensor(AgentInfo(i,5),:) .* target2sensor(currConf(j,1),:);
                 bestPayload = find(compatible == max(compatible));
-                excelOut = [excelOut ; AgentInfo(i,4) currConf(j,1) bestPayload currConf(j,2:3)];
+                excelOut = [excelOut ; AgentInfo(i,5) currConf(j,1) bestPayload currConf(j,2:3)];
             end
         end
     end

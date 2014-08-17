@@ -17,8 +17,8 @@ function [ Agent2sensor,target2sensor, AgentInfo,target2Val, target2TargetDistan
     GenData2 = M2PLLink;
     
     % Parse the input file and return the data
-    Agent2sensor          = buildAgent2sensor(infile, GenData1, GenData2);
     AgentInfo             = buildAgentInfo(infile, GenData1);
+    Agent2sensor          = buildAgent2sensor(infile, GenData1, GenData2,AgentInfo);
     target2sensor         = buildTarget2sensor(infile, GenData2);
     target2Val            = buildTarget2Val(infile);
     target2TargetDistance = buildTarget2TargetDistance(infile, size(target2Val,1));
