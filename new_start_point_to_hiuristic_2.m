@@ -1,4 +1,4 @@
-  function [best_match,val_best,best_perm,counter]=new_start_point_to_hiuristic_2(agent2conf,all_conf)
+  function [best_match,val_best]=new_start_point_to_hiuristic_2(agent2conf,all_conf)
   tic
   %%%% calculate all conf val
     global targetsData;
