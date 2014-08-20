@@ -1,4 +1,4 @@
-function [match,total_val]=Hiuristic_staff(agent2conf,all_conf,targetsData)
+function [total_val,match]=Hiuristic_staff(agent2conf,all_conf,targetsData)
 
     global allConf;
     allConf = all_conf;

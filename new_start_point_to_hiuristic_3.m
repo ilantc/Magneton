@@ -1,4 +1,4 @@
-  function [match,val]=new_start_point_to_hiuristic_3(agent2conf,all_conf,targetsData)
+  function [val,match]=new_start_point_to_hiuristic_3(agent2conf,all_conf,targetsData)
   
   %%%% calculate all conf val
     global allConf;
