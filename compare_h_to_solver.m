@@ -1,6 +1,6 @@
 function [outMatrix] = compare_h_to_solver(files,h,outFile)
     
-    params      = [1000,2000,3000];
+    params      = [1,2,3]*10;
     numFiles    = size(files,2);
     numParams   = size(params,2);
     numIter     = numParams * numFiles;
@@ -11,8 +11,8 @@ function [outMatrix] = compare_h_to_solver(files,h,outFile)
         for i=1:size(files,2)
             iter              = iter + 1;
             fileName          = sprintf('%s',files{i});
-            agent2conf        = allStats.(sprintf('f_%s',files{i})).allStat.agent2conf;
-            allConf           = allStats.(sprintf('f_%s',files{i})).allStat.allConfigurations;
+            agent2conf        = allStats.(sprintf('f_%s',files{i})).agent2conf;
+            allConf           = allStats.(sprintf('f_%s',files{i})).allConfigurations;
             h_time            = tic;
             [~,val]           = h(agent2conf,allConf);
             h_time            = toc(h_time);

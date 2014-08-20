@@ -1,6 +1,5 @@
-function [match,total_val]=Hiuristic_staff(agent2conf,all_conf)
+function [match,total_val]=Hiuristic_staff(agent2conf,all_conf,targetsData)
 
-    global targetsData;
     global allConf;
     allConf = all_conf;
     VAL_COL=3;
@@ -52,7 +51,7 @@ function [match,total_val]=Hiuristic_staff(agent2conf,all_conf)
             agent_conf=find(agent2conf(a,:)>0);
             for i=1:size(agent_conf,2) %run over all new possible confs
                 new_match(a)=agent_conf(i);
-                new_val= calculate_assign_value(new_match);
+                new_val= calculate_assign_value(new_match,targetsData);
                 if new_val>total_val
                     total_val=new_val;
                     match=new_match;
@@ -65,9 +64,8 @@ function [match,total_val]=Hiuristic_staff(agent2conf,all_conf)
     end
 end  
 
- function [val]=calculate_assign_value(match)
+ function [val]=calculate_assign_value(match,targetsData)
     VAL_COL=3;
-    global targetsData;
     global allConf;
     choosen_conf= allConf(:,match');
     targets=sum(choosen_conf,2)>0;

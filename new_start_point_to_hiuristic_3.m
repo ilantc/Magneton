@@ -1,7 +1,6 @@
-  function [match,val]=new_start_point_to_hiuristic_3(agent2conf,all_conf)
+  function [match,val]=new_start_point_to_hiuristic_3(agent2conf,all_conf,targetsData)
   
   %%%% calculate all conf val
-    global targetsData;
     global allConf;
     allConf = all_conf;
     VAL_COL=3;
@@ -25,8 +24,8 @@
     %%%% find best perm
     temp_agent2conf=agent2conf;
     for k=1:size(temp_agent2conf,1)
-        [num, idx] = max(temp_agent2conf(:))
-        [x,y] = ind2sub(size(temp_agent2conf),idx)
+        [~, idx] = max(temp_agent2conf(:));
+        [x,y] = ind2sub(size(temp_agent2conf),idx);
         permutation(k)=x;
         temp_agent2conf(x,:)=0;
         temp_agent2conf(:,y)=0;
@@ -49,12 +48,11 @@
             end
         end
     end
-     val=calculate_assign_value(match);   
+     val=calculate_assign_value(match,targetsData);   
  end
 
- function [val]=calculate_assign_value(match)
+ function [val]=calculate_assign_value(match,targetsData)
     VAL_COL=3;
-    global targetsData;
     global allConf;
     choosen_conf= allConf(:,match');
     targets=sum(choosen_conf,2)>0;
