@@ -28,11 +28,11 @@ function [total_val,match]=Hiuristic_staff(agent2conf,all_conf,targetsData)
         match(a)= maximum(1); %first maximum
     end
     %match=b_match;
-    total_val=calculate_assign_value(match);
+    total_val=calculate_assign_value(match,targetsData);
 
     %another starting point
     hiuristic_match=new_start(agent2conf);
-    val_hiuristic_first_match=calculate_assign_value(hiuristic_match);
+    val_hiuristic_first_match=calculate_assign_value(hiuristic_match,targetsData);
   
     % check which is better starting point
     if val_hiuristic_first_match>    total_val
