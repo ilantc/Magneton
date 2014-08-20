@@ -1,6 +1,5 @@
   function [val_best,best_match]=new_start_point_to_hiuristic_2(agent2conf,all_conf,targetsData)
-  tic
-  %%%% calculate all conf val
+   %%%% calculate all conf val
     global allConf;
     allConf = all_conf;
     VAL_COL=3;
@@ -54,7 +53,7 @@
             counter=counter+1;
         end
     end
-    toc
+    
  end
 
  function [val]=calculate_assign_value(match,targetsData)

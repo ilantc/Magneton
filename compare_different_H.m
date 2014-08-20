@@ -7,9 +7,9 @@ function [stat_matrix] = compare_different_H(files,stat_obj)
         agent2conf                              = stat_obj.(sprintf('f_%s',files{k})).agent2conf;
         targetsData                              = stat_obj.(sprintf('f_%s',files{k})).targetsData;
         
-        [val_h_staff,~]                         = Hiuristic_staff(agent2conf,allConfigurations,targetsData);
-        [val_random_conf,~]               = new_start_point_to_hiuristic_2(agent2conf,allConfigurations,targetsData);
-        [val_best_conf,~]   = new_start_point_to_hiuristic_3(agent2conf,allConfigurations,targetsData);
+        [val_h_staff,~]                          = Hiuristic_staff(agent2conf,allConfigurations,targetsData);
+        [val_random_conf,~]                  = new_start_point_to_hiuristic_2(agent2conf,allConfigurations,targetsData);
+        [val_best_conf,~]                       = new_start_point_to_hiuristic_3(agent2conf,allConfigurations,targetsData);
         
         stat_matrix(k,1)                        =  allStat.val;
         stat_matrix(k,2)                        =  val_random_conf;
