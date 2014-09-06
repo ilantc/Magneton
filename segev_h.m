@@ -1,4 +1,5 @@
-  function [val_best,best_match,counter]=new_start_point_to_hiuristic_2(agent2conf,all_conf,targetsData)
+  function [val_best,best_match]=segev_h(agent2conf,all_conf,targetsData)
+  tic 
   %%%% calculate all conf val
     global allConf;
     allConf = all_conf;
@@ -42,7 +43,8 @@
             match(a)= maximum;%first maximum
             for c=1:size(allConf,2)
                 if allConf(:,c)'*targets_of_best_conf>0
-                    agent2conf_temp(:,c)=0;
+                    agent2conf_temp(:,c)= agent2conf_temp(:,c)- (allConf(:,c)' *(8-targetsData(:,VAL_COL))) ;
+                %agent2conf_temp(:,c)= (allConf(:,c)-targets_of_best_conf)' *(8-targetsData(:,VAL_COL)) ;
                 end
             end
         end
@@ -50,7 +52,17 @@
         if val_best<=new_val
             best_match=match;
             val_best=new_val;
+            best_perm=permutation;
             counter=counter+1;
         end
     end
+    toc
+ end
+
+ function [val]=calculate_assign_value(match,targetsData)
+    VAL_COL=3;
+    global allConf;
+    choosen_conf= allConf(:,match');
+    targets=sum(choosen_conf,2)>0;
+    val=(8-targetsData(:,VAL_COL)') * targets;     
  end
