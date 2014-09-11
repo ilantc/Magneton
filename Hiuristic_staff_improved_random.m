@@ -1,5 +1,7 @@
-function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2conf,all_conf,targetsData,start_point_option,start_match)
+function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2conf,all_conf,targetsData,start_point_option,start_match,numofiter)
 % here we choose randomly from the list  of the configuration that gives greater value than current match.
+    VAL_COL=3;
+    value_progress=[];
     global allConf;
     allConf = all_conf;    
 %  Update each conf with its value. where c is index of conf and t index of target
@@ -35,11 +37,11 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
     end
    total_val=calculate_assign_value(match,targetsData);
 %%%%%%%%%%%%%%%%%%%%%%%
-    value_progress=[total_val];
     agents=randperm(size(agent2conf,1));
     counter=0;
     numOfAgentToSample=0;
-    while (numOfAgentToSample <size(agent2conf,1)*300)
+    total_number_of_iteration=size(agent2conf,1)*numofiter;
+    while (numOfAgentToSample <total_number_of_iteration)
         counter=counter+1;
         numOfAgentToSample=numOfAgentToSample+1;
         agent=randsample(agents,1);
@@ -53,6 +55,7 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
                 better_match=[better_match , available_conf(c)];
             end
            if new_val>total_val
+               value_progress=numOfAgentToSample;
                 counter=0;
            end
         end
@@ -66,10 +69,9 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
             total_val= calculate_assign_value(match,targetsData);
         end
        % value_progress = [value_progress , total_val];
-        if (counter>size(agents,2)*50)
+        if (counter>size(agents,2)*100)
             fprintf('Not making any progress');
             numOfAgentToSample
-            counter
             break
         end
     end

@@ -37,7 +37,7 @@ function [out] = buildStats(files)
                 j = j+1;
                 fprintf('\tIteration %d/%d\n',(((i-1)*dimBuild) + j),dimRun*dimBuild);
                 if ((currFileOut(i+1,j+1) == 0) && (runParam <= buildParam) )
-                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,allStat] = evalc('mainBFS(filename,buildParam,runParam,0);');
+                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,~,allStat] = evalc('mainBFS(filename,buildParam,runParam,0);');
                     currFileOut(i+1,j+1) = allStat.val;
                     %xlswrite('stat.xls',allStat.val,sprintf('File_%s',files{file}),sprintf('%s%i',char(65 + i),j + 1));
                     csvwrite(csvFileName,currFileOut,0,0);

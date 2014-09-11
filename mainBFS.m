@@ -1,4 +1,4 @@
-function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput)
+function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
     
     global targetsData;
     global Agent2target;
@@ -10,6 +10,9 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     parsingTime = tic;
     % parse the input file
     [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance, missionLink ] = ParseInfile( file );
+    if allowParallel~=1
+        missionLink=zeros(size(missionLink,1),size(missionLink,2));
+    end
     Agent2target = Agent2sensor * target2sensor';
     targetsData  = read_excel_and_clean(file,'InMissions');
     numOfTargets = size(target2sensor,1);
