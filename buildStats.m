@@ -1,13 +1,15 @@
 function [out] = buildStats(files) 
     tic
-    %files = {'60Missions','60Missions_2','50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'};
-    files = {'50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'};
+    %files =
+    %{'60Missions','60Missions_2','50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'}; 
+    % files = {'50Missions','50Missions_2','40Missions','40Missions_2','30Missions','30Missions_2'};
+    files = {'Example_1_51','Example_2_51','Example_3_114','Example_4_133','Example_5_51'};
     buildParamMin = 10;
-    buildParamMax = 4000;
+    buildParamMax = 4500;
     buildParamStep = 100;
     
     runParamMin = 10;
-    runParamMax = 4000;
+    runParamMax = 4500;
     runParamStep = 50;
     
     dimRun = size(runParamMin:runParamStep:runParamMax,2);
@@ -37,7 +39,7 @@ function [out] = buildStats(files)
                 j = j+1;
                 fprintf('\tIteration %d/%d\n',(((i-1)*dimBuild) + j),dimRun*dimBuild);
                 if ((currFileOut(i+1,j+1) == 0) && (runParam <= buildParam) )
-                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,~,allStat] = evalc('mainBFS(filename,buildParam,runParam,0);');
+                    [~,~,~,~, ~, ~, ~, ~, ~, ~, ~,~,~,allStat] = evalc('mainBFS(filename,buildParam,runParam,0,1);');
                     currFileOut(i+1,j+1) = allStat.val;
                     %xlswrite('stat.xls',allStat.val,sprintf('File_%s',files{file}),sprintf('%s%i',char(65 + i),j + 1));
                     csvwrite(csvFileName,currFileOut,0,0);

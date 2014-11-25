@@ -1,4 +1,4 @@
-function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
+function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
     
     global targetsData;
     global Agent2target;
@@ -22,14 +22,15 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     agent2conf        = zeros(numOfDrones,0);
     
     sumAllVals = sum(target2Val);
-    fprintf('total value = %d\n',sumAllVals);
+    maxVal = min(sumAllVals,maxValH1(Agent2target,targetsData,AgentInfo,target2Val));
+    fprintf('total value = %d, Best heuristic value = %d\n',sumAllVals,maxVal);
     
     parsingTime = toc(parsingTime);
     fprintf('Done parsing infile, elapsed time %f\n',parsingTime);
     confBuildingTime = tic;
     allStat = {};
     % build the configuration per drone
-    for (drone = 1 : numOfDrones) 
+    for drone = 1:numOfDrones
         %fprintf('calculating confs for drone %i of %i (agentID is %i)\n',drone,numOfDrones,AgentInfo(drone,4));
         agentFlightTime = AgentInfo(drone,2);
         agentTakeoffTime = AgentInfo(drone,1);

@@ -1,13 +1,14 @@
-function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2conf,all_conf,targetsData,start_point_option,start_match,numofiter)
+function [total_val,match,value_progress,numOfIterBeforebreake,first_val]=Hiuristic_staff_improved_random(agent2conf,all_conf,targetsData,start_point_option,start_match,numofiter)
 % here we choose randomly from the list  of the configuration that gives greater value than current match.
+    tic
     VAL_COL=3;
+    numOfIterBeforebreake=-1;
     value_progress=[];
     global allConf;
     allConf = all_conf;    
 %  Update each conf with its value. where c is index of conf and t index of target
 %%%%%%%%%%%%%%%%%%%%%%%%
     if size(start_match,1)~=size(agent2conf,1)
-        fprintf('didnt got match');
         for c=1:size(agent2conf,2)
             conf_val=0;
             for t=1:size(allConf,1)
@@ -36,6 +37,7 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
         match=start_match;
     end
    total_val=calculate_assign_value(match,targetsData);
+   first_val=total_val;
 %%%%%%%%%%%%%%%%%%%%%%%
     agents=randperm(size(agent2conf,1));
     counter=0;
@@ -48,6 +50,7 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
         new_match=match;
         better_match=[];
         available_conf=find(agent2conf(agent,:)>0);
+        value_progress = [value_progress , total_val];
         for c=1:size(available_conf,2)
             new_match(agent)=available_conf(c);
             new_val= calculate_assign_value(new_match,targetsData);
@@ -55,7 +58,6 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
                 better_match=[better_match , available_conf(c)];
             end
            if new_val>total_val
-               value_progress=numOfAgentToSample;
                 counter=0;
            end
         end
@@ -68,13 +70,12 @@ function [total_val,match,value_progress]=Hiuristic_staff_improved_random(agent2
             match(agent)=choosen_index;   
             total_val= calculate_assign_value(match,targetsData);
         end
-       % value_progress = [value_progress , total_val];
         if (counter>size(agents,2)*100)
-            fprintf('Not making any progress');
-            numOfAgentToSample
+            numOfIterBeforebreake=numOfAgentToSample;
             break
         end
     end
+    toc
 end
 
   

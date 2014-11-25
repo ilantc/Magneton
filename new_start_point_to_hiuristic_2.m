@@ -1,4 +1,4 @@
-  function [val_best,best_match,counter]=new_start_point_to_hiuristic_2(agent2conf,all_conf,targetsData)
+  function [val_best,best_match,counter]=new_start_point_to_hiuristic_2(agent2conf,all_conf,targetsData,num_of_iter)
   %%%% calculate all conf val
     global allConf;
     allConf = all_conf;
@@ -20,7 +20,6 @@
         end
     end
     %%%%
-    num_of_iter=100;
     num=size(agent2conf,1);
     all_permutation=zeros(num_of_iter,num);
     for i=1:num_of_iter
