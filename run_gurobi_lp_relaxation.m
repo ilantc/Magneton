@@ -136,7 +136,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         end
     end
     
-    new_constraint=zeros(1,numOfYVars);
+    new_constraint=emptyRow;
     % no targets before 0
     iterator=1;
     while iterator<numOfYVars
@@ -147,7 +147,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     b = [b ; 0 ; 0];
     
     % no targets after inf
-    new_constraint=zeros(1,numOfYVars);
+    new_constraint=emptyRow;
     jump_size = NumOfTargets*(NumOfTargets-1);
     iterator=1+jump_size;
     while iterator<numOfYVars
@@ -160,7 +160,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         % ?????? ????? %
     for i=1:NumOfAgents
         for j=1:NumOfTargets
-            new_constraint=zeros(1,numOfYVars);
+            new_constraint=emptyRow;
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets)=-1*ones(1,NumOfTargets);
             for t=1:NumOfTargets
@@ -177,7 +177,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     jump_size = NumOfTargets*NumOfTargets;
     for j=0:(NumOfTargets-1)
         iterator=j*NumOfTargets+1;
-        new_constraint=zeros(1,numOfYVars);
+        new_constraint=emptyRow;
         while iterator<numOfYVars
         new_constraint(iterator:iterator+NumOfTargets)=ones(1,NumOfTargets);
         iterator=iterator+jump_size;
@@ -189,7 +189,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % scanner constraint
     for i=1:NumOfAgents
         for j=1:NumOfTargets
-            new_constraint=zeros(1,numOfYVars);
+            new_constraint=emptyRow;
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets)=ones(1,NumOfTargets);
             A = [A ; (-1)*new_constraint];
