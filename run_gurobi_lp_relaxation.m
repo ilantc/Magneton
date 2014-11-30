@@ -1,21 +1,12 @@
 % Function: run_LP_Solve
-% input:    configuration - a matrix where each column is a target
-%                           configuration (binary), each row is a target
-%           AgentInfo(i,1)  = takeoff time
+% input:    AgentInfo(i,1)  = takeoff time
 %           AgentInfo(i,2)  = flightTime
 %           AgentInfo(i,3)  = speed
 %           AgentInfo(i,4)  = AgentID;
 %           AgentInfo(i,5)  = FlightID;
 %           verbose       - tell me more...
 
-function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,agentInfo,Agent2target,verbose)
-    
-    % constraints - every target has at most one agent assigned to it =>
-    %               #rows(configuration) constraints
-    %             - every agent is assigned to at most one configuration =>
-    %               #rows(agents2conf) constraints
-    %             - agent is only assigned to legal confs =>
-    %               #rows(agents2conf) constraints
+function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,agentInfo,Agent2target,missionLink,verbose)
     
     targetsData_BEGIN_COL       =4;
     targetsData_END_COL         =5;
@@ -29,7 +20,9 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         fprintf('\nentered run_gurobi_for_relaxation');
     end
     
-    target2Val = [0;target2Val;0];
+    %fix input: add target 0,inf  and fix parallel targets by duration
+    [targetsData,Agent2target] = input_relaxation(missionLink,targetsData,Agent2target,verbose);
+    target2val = [0;target2val;0];
     
     % some required variables 
     NumOfAgents      = size(agentInfo,1);
@@ -44,28 +37,28 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     
     verbose && fprintf('\nINFO: NumOfAgenets=%d, NumOfTargets=%d',NumOfAgents,NumOfTargets);
     
-    % make sure confval is a row vector
-    if (size(confVal,1) > 1)
-        confVal = confVal';
-    end
-    size(confVal,1) > 1 && error('confVal must be either row or col vector');
+%     % make sure confval is a row vector
+%     if (size(confVal,1) > 1)
+%         confVal = confVal';
+%     end
+%     size(confVal,1) > 1 && error('confVal must be either row or col vector');
     
     % the columns are sorted by:
     % Y[1,1,1],...,Y[1,1,K],Y[1,2,1],...,Y[1,2,K],...,Y[1,J,1],...,Y[1,J,K],Y[2,1,1],....,Y[I,J,K]
     JBlock = [];
-    for j=1:numOfTargets
-        JBlock = [JBlock ; repmat(target2Val(j),[K,1])];
+    for j=1:NumOfTargets
+        JBlock = [JBlock ; repmat(target2val(j),[K,1])];
     end
     % size(JBlok) = J*K
     c = repmat(JBlock,[NumOfAgents,1]);
     % size(c) = I*J*K
-    c = [c ; zeros(numOfTimeWinVars,1)]
+    c = [c ; zeros(numOfTimeWinVars,1)];
     % size(c) = I*J*K  +  2*I*J
 
     % gurobi model objective value
     model.obj = c;
     
-    % set max 
+    % set objective function to max 
     model.modelsense = 'max';
     
     % declare integer variables
@@ -137,9 +130,70 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
             row1(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
             row1(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
             row2(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
-            row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1
+            row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
             A = [A ; row1; row2];
             b = [b ; 0 ; 0];
+        end
+    end
+    
+    new_constraint=zeros(1,numOfYVars);
+    % no targets before 0
+    iterator=1;
+    while iterator<numOfYVars
+        new_constraint(iterator)=1;
+        iterator=iterator+NumOfTargets;
+    end
+    A = [A ; new_constraint; (-1)*new_constraint];
+    b = [b ; 0 ; 0];
+    
+    % no targets after inf
+    new_constraint=zeros(1,numOfYVars);
+    jump_size = NumOfTargets*(NumOfTargets-1);
+    iterator=1+jump_size;
+    while iterator<numOfYVars
+        new_constraint(iterator:iterator+NumOfTargets)=ones(1,NumOfTargets);
+        iterator=iterator+jump_size;
+    end
+    A = [A ; new_constraint; (-1)*new_constraint];
+    b = [b ; 0 ; 0];
+    
+        % ?????? ????? %
+    for i=1:NumOfAgents
+        for j=1:NumOfTargets
+            new_constraint=zeros(1,numOfYVars);
+            index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
+            new_constraint(index:index+NumOfTargets)=-1*ones(1,NumOfTargets);
+            for t=1:NumOfTargets
+                index = cubeIndex2int(i,t,j,NumOfTargets,NumOfTargets);
+                new_constraint(index)=1;
+            end
+            A = [A ; new_constraint ; (-1)*new_constraint];
+            b = [b;0;0];
+        end
+    end
+    
+    
+    % each target has maximum one target after (i included inf target here...)
+    jump_size = NumOfTargets*NumOfTargets;
+    for j=0:(NumOfTargets-1)
+        iterator=j*NumOfTargets+1;
+        new_constraint=zeros(1,numOfYVars);
+        while iterator<numOfYVars
+        new_constraint(iterator:iterator+NumOfTargets)=ones(1,NumOfTargets);
+        iterator=iterator+jump_size;
+        end
+        A = [A ; (-1)*new_constraint];
+        b = [b ; -1];
+    end
+    
+    % scanner constraint
+    for i=1:NumOfAgents
+        for j=1:NumOfTargets
+            new_constraint=zeros(1,numOfYVars);
+            index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
+            new_constraint(index:index+NumOfTargets)=ones(1,NumOfTargets);
+            A = [A ; (-1)*new_constraint];
+            b = [b ; -1*Agent2target];
         end
     end
     
@@ -218,3 +272,36 @@ end
 function [index] = getSOrEIndex(offset,i,j,numOfTargets)
     index = offset + sqIndex2int(i,j,numOfTargets);
 end
+
+function [targetsData,Agent2target] = input_relaxation(missionLink,targetsData,Agent2target,verbose)
+    
+    %eliminating parallel targets by dividing their duration time by 2
+    for i=1:size(missionLink,1)
+        if sum(missionLink(i,:)>0)
+            targetsData(i,6)=targetsData(i,6)/2; % 6 is the duration column
+        end
+    end
+
+    %add targets 0 and inf to agent2target at the begining and end of the matrix 
+    Agent2target=[ones(size(Agent2target,1),1),Agent2target,ones(size(Agent2target,1),1)];
+    %add targets 0 and inf to targetsData at the end of the matrix last row
+    targetsData_vector=zeros(1,size(targetsData,2));
+    targetsData_vector(5) = 1000000;              %end time
+    targetsData=[targetsData;targetsData_vector]; % added the zero target
+    targetsData_vector(1) = -1;                   %ID of inf target
+    targetsData=[targetsData_vector;targetsData]; % added the inf target
+end
+
+            
+            
+
+
+
+
+
+
+
+    
+
+
+
