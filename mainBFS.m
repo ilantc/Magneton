@@ -1,4 +1,4 @@
-function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
+function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,missionLink,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
     
     global targetsData;
     global Agent2target;
