@@ -190,8 +190,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     time = tic;
     % no targets after inf
     new_constraint=zeros(1,NumOfVariables);
-    jump_size = NumOfTargets*(NumOfTargets-1);
-    iterator=1+jump_size;
+    jump_size = NumOfTargets*(NumOfTargets);
+    iterator=1+jump_size - NumOfTargets;
     while iterator<numOfYVars
         new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
         iterator=iterator+jump_size;
