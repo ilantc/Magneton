@@ -5,6 +5,7 @@ function [allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,allVals
                             % 3rd col = amound for amountForBuild
                             % 4th col = amound for finalAmount
     confVals = zeros(1,confNum);
+    size(allConfigurations)
     for conf=1:confNum
         currVal = getConfVal(allConfigurations(:,conf)>0,target2Val);
         valIndex = find(allValues(:,1) == currVal);
