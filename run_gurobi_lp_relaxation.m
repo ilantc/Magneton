@@ -62,7 +62,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     model.modelsense = 'max';
     
     % declare integer variables
-    model.vtype(ones(numOfYVars,1)) = 'B';
+    vtypes = [repmat('B',[1,numOfYVars]),repmat('C',[1,numOfTimeWinVars])];
+    model.vtype = vtypes;
     
     A = [];
     A = sparse(A);
