@@ -37,7 +37,6 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         speed = AgentInfo(drone,3);
         agentID = AgentInfo(drone,5);
         currConfs = zeros(numOfTargets,1);
-        fprintf('n targets is: %d',numOfTargets);
         confTimes = zeros(numOfTargets,2,0);
         allAgentConfs = currConfs;
         droneStat = {};

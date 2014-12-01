@@ -260,7 +260,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     
     % assign bounds
     model.lb = zeros(NumOfVariables,1);
-    model.ub = ones(NumOfVariables,1);
+    model.ub = [ones(numOfYVars,1); M * ones(numOfTimeWinVars,1)];
     
     % output file for temp memory usage
     params.NodefileStart = 0.5;
