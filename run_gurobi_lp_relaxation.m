@@ -246,6 +246,19 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     end
     verbose && fprintf('i scans j only iff canScan(i,j)\nElapsed=%10.2f\n',toc(time));
     
+    time = tic;
+    % Y_i_j_j <= 0
+    for i=1:NumOfAgents
+        for j=1:NumOfTargets
+            new_constraint=zeros(1,NumOfVariables);
+            index = cubeIndex2int(i,j,j,NumOfTargets,NumOfTargets);
+            new_constraint(index) = -1;
+            A = [A ; new_constraint];
+            b = [b ; 0];
+        end
+    end
+    verbose && fprintf('i scans j only iff canScan(i,j)\nElapsed=%10.2f\n',toc(time));
+    
     % add A and b to the model
     model.A = sparse(A);
     model.rhs = b;
