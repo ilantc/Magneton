@@ -31,7 +31,6 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     NumOfVariables   = numOfYVars + numOfTimeWinVars;
     sOffset          = numOfYVars;
     eOffset          = numOfYVars + (NumOfAgents*NumOfTargets);
-    emptyRow         = zeros(1,NumOfVariables);
     
     
     verbose && fprintf('\nINFO: NumOfAgenets=%d, NumOfTargets=%d, numOfYVars=%d, numOfTimeWinVars=%d, sOffset=%d, eOffset=%d\n',...
@@ -96,7 +95,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
 %     for i=1:NumOfAgents
 %         for j=1:NumOfTargets
 %             for k=1:NumOfTargets
-%                 row = emptyRow;
+%                 row = zeros(1,NumOfVariables);
 %                 row(yIndex) = -M;
 %                 row(sIndex) = 1;
 %                 row(eIndex) = -1;
@@ -133,8 +132,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % every target gets scanned within its window 
     for i=1:NumOfAgents
         for j=1:NumOfTargets
-            row1 = emptyRow;
-            row2 = emptyRow;
+            row1 = zeros(1,NumOfVariables);
+            row2 = zeros(1,NumOfVariables);
             row1(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
             row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
             A = [A ; row1; row2];
@@ -147,8 +146,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % target 1 is getting scanned by agent i after takeoff(i)
     % target N is finished getting scanned before landing(i)
     for i=1:NumOfAgents
-        row1 = emptyRow;
-        row2 = emptyRow;
+        row1 = zeros(1,NumOfVariables);
+        row2 = zeros(1,NumOfVariables);
         row1(getSOrEIndex(eOffset,i,1,NumOfTargets)) = 1;
         row2(getSOrEIndex(sOffset,i,NumOfTargets,NumOfTargets)) = -1;
         A = [A ; row1; row2];
@@ -177,7 +176,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     verbose && fprintf('scanning time is t_J for every target j\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
-    new_constraint=emptyRow;
+    new_constraint=zeros(1,NumOfVariables);
     % no targets before 0
     iterator=1;
     while iterator<numOfYVars
@@ -190,7 +189,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     
     time = tic;
     % no targets after inf
-    new_constraint=emptyRow;
+    new_constraint=zeros(1,NumOfVariables);
     jump_size = NumOfTargets*(NumOfTargets-1);
     iterator=1+jump_size;
     while iterator<numOfYVars
@@ -206,7 +205,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % ?????? ????? %
     for i=1:NumOfAgents
         for j=1:NumOfTargets
-            new_constraint=emptyRow;
+            new_constraint=zeros(1,NumOfVariables);
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets - 1)=-1*ones(1,NumOfTargets);
             for t=1:NumOfTargets
@@ -224,7 +223,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     jump_size = NumOfTargets*NumOfTargets;
     for j=0:(NumOfTargets-1)
         iterator=j*NumOfTargets+1;
-        new_constraint=emptyRow;
+        new_constraint=zeros(1,NumOfVariables);
         while iterator<numOfYVars
         new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
         iterator=iterator+jump_size;
@@ -238,7 +237,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % scanner constraint
     for i=1:NumOfAgents
         for j=1:NumOfTargets
-            new_constraint=emptyRow;
+            new_constraint=zeros(1,NumOfVariables);
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets - 1)=ones(1,NumOfTargets);
             A = [A ; (-1)*new_constraint];
@@ -357,7 +356,7 @@ end
 % NumOfVariables   = numOfYVars + numOfTimeWinVars;
 % sOffset          = numOfYVars;
 % eOffset          = numOfYVars + (NumOfAgents*NumOfTargets);
-% emptyRow         = zeros(1,NumOfVariables);
+% zeros(1,NumOfVariables)         = zeros(1,NumOfVariables);
 % M                = 100;
 % verbose          = 1;
 % A                = [];
