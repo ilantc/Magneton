@@ -250,7 +250,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     model.A = sparse(A);
     model.rhs = b;
     model.sense = '>';
-    
+    gurobi_write(model, 'model.lp');
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
