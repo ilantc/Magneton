@@ -164,11 +164,11 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
             currBlock = [zeros(1,NumOfTargets *(j-1)), ones(1,NumOfTargets), zeros(1,(NumOfTargets * (NumOfTargets - j)))];
             currBlock = currBlock * targetsData(j,targetsData_DURATION_COL);
             row1 = [allAgentsBeforeI,currBlock,allAgentsAfterI,rest];
-            row2 = [allAgentsBeforeI,currBlock,allAgentsAfterI,rest];
+            row2 = [allAgentsBeforeI,-1 * currBlock,allAgentsAfterI,rest];
             row1(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
             row1(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
-            row2(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
-            row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
+            row2(getSOrEIndex(sOffset,i,j,NumOfTargets)) = -1;
+            row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = 1;
             A = [A ; row1; row2];
             b = [b ; 0 ; 0];
         end
