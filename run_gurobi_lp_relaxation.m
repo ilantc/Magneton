@@ -205,9 +205,9 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     
     
     time = tic;
-    % ?????? ????? %
+    % flow constraint %
     for i=1:NumOfAgents
-        for j=1:NumOfTargets
+        for j=2:NumOfTargets-1
             new_constraint=zeros(1,NumOfVariables);
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets - 1)=-1*ones(1,NumOfTargets);
@@ -222,10 +222,10 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     verbose && fprintf('flow constrs\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
-    % each target has maximum one target after (i included inf target here...)
+    % each target has maximum one target after 
     jump_size = NumOfTargets*NumOfTargets;
     for j=0:(NumOfTargets-1)
-        iterator=j*NumOfTargets+1;
+        iterator=j*NumOfTargets+2;
         new_constraint=zeros(1,NumOfVariables);
         while iterator<numOfYVars
             new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
