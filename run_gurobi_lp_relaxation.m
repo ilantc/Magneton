@@ -116,6 +116,9 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     sMatrix      = [];
     eMatrix      = [];
     eMatrixBlock = [];
+    sMatrix      = sparse(sMatrix);
+    eMatrix      = sparse(eMatrix);
+    eMatrixBlock = sparse(eMatrixBlock);
     for i=1:NumOfTargets
         eMatrixBlock = [eMatrixBlock ; [zeros(NumOfTargets,i - 1), -1 * ones(NumOfTargets,1), zeros(NumOfTargets,NumOfTargets -i)]];
     end 
@@ -225,8 +228,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         iterator=j*NumOfTargets+1;
         new_constraint=zeros(1,NumOfVariables);
         while iterator<numOfYVars
-        new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
-        iterator=iterator+jump_size;
+            new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
+            iterator=iterator+jump_size;
         end
         A = [A ; (-1)*new_constraint];
         b = [b ; -1];
@@ -257,7 +260,7 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
             b = [b ; 0];
         end
     end
-    verbose && fprintf('i scans j only iff canScan(i,j)\nElapsed=%10.2f\n',toc(time));
+    verbose && fprintf('Y_i_j_j <= 0\nElapsed=%10.2f\n',toc(time));
     
     % add A and b to the model
     model.A = sparse(A);
