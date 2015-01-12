@@ -1,4 +1,4 @@
-function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confStat] = buildConfigurationsPerDroneBFS(lastLevelConfs,lastLevelTimes,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,amountForBuild,finalAmount)
+function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confStat] = buildConfigurationsPerDroneBFS(lastLevelConfs,lastLevelTimes,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,amountForBuild,finalAmount,currTargetID)
     %% for all confs in lastLevelConfs - try to add an additional task to
     %% it
     global Agent2target;
@@ -16,7 +16,7 @@ function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confSt
             % and agent is able to sense it
             if (Agent2target(agent,targetID) ~= 0)
                 
-                [success,newConf,confTimes] = addToConf(zeros(numTargets,0),zeros(numTargets,2),targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize);
+                [success,newConf,confTimes] = addToConf(zeros(numTargets,0),zeros(numTargets,2),targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID);
                 if (success)
                         allConfigurations = [allConfigurations, newConf];
                         allConfTimes(:,:,size(allConfTimes,3)+1) = confTimes;
@@ -36,7 +36,7 @@ function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confSt
                 % and agent is able to sense it
                 if ((currConf(targetID) == 0) && (Agent2target(agent,targetID) ~= 0))
                     
-                    [success,newConf,confTimes] = addToConf(currConf,currTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize);
+                    [success,newConf,confTimes] = addToConf(currConf,currTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,0);
                     
                     % if feasible - add to all Confs
                     if (success)

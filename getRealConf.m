@@ -1,4 +1,4 @@
-function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v)
+function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v,currTargetID)
     global targetsData;
     % targetsData col values
     ID_COL          =1;
@@ -37,7 +37,7 @@ function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v)
     numTargets = size(targetsData,1);
     confTimes = zeros(numTargets,2);
     tempConf   = zeros(numTargets,1);
-    realConf = findRealConfParralel(sortedTargetsData,zeros(confSize,4),tempConf,confTimes,0           ,takeoffTime,takeoffTime + flightTime,speed,numTargets,v);
+    realConf = findRealConfParralel(sortedTargetsData,zeros(confSize,4),tempConf,confTimes,0           ,takeoffTime,takeoffTime + flightTime,speed,numTargets,v,currTargetID);
               %findRealConfParralel(sortedTargetsData,currRealConf     ,tempConf,confTimes,currConfSize,takeoffTime,finishTime              ,speed,numTargets,v)
 end
        

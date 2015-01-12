@@ -1,4 +1,4 @@
-function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize)
+function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID)
     global target2TargetDistance;
     global targetsData;
     global missionLink;
@@ -14,7 +14,7 @@ function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agent
     conf = 0;
     if (oldConfSize == 0)
         % flight time between targets
-        flightTime = target2TargetDistance(1,targetID + 1)/(speed*60*60);
+        flightTime = target2TargetDistance(currTargetID + 1,targetID + 1)/(speed*60*60);
 
         % start time for next target
         currStart  = max(agentTakeoffTime + flightTime,targetsData(targetID,targetsData_BEGIN_COL));

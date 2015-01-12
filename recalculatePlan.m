@@ -1,47 +1,25 @@
-function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,missionLink,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
+function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agent2conf,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,missionLink,currTime)
+    updateAgent2target();
+    updateTargets();
+    updateAgentInfo();
     
-    global targetsData;
-    global Agent2target;
-    global target2TargetDistance;
-    global missionLink;
-    
-    amountForBuild = buildAmount;
-    finalAmount = runAmount;
-    parsingTime = tic;
-    % parse the input file
-    [ Agent2sensor,target2sensor, AgentInfo, target2Val, target2TargetDistance, missionLink ] = ParseInfile( file );
-    if allowParallel~=1
-        missionLink=zeros(size(missionLink,1),size(missionLink,2));
-    end
-    Agent2target = Agent2sensor * target2sensor';
-    targetsData  = read_excel_and_clean(file,'InMissions');
-    numOfTargets = size(target2sensor,1);
-    numOfDrones  = size(AgentInfo,1);
-
-    currTargetID = 1 % all drones are in spot 0,0 (target 0)
-    
+ %   <build all confs>
+    numOfTargets      = size(targetsData,1);
+    numOfDrones       = size(AgentInfo,1);
     allConfigurations = zeros(0,numOfTargets);
     agent2conf        = zeros(numOfDrones,0);
-    
-    sumAllVals = sum(target2Val);
-    maxVal = min(sumAllVals,maxValH1(Agent2target,targetsData,AgentInfo,target2Val));
-    fprintf('total value = %d, Best heuristic value = %d\n',sumAllVals,maxVal);
-    
-    parsingTime = toc(parsingTime);
-    fprintf('Done parsing infile, elapsed time %f\n',parsingTime);
-    confBuildingTime = tic;
-    allStat = {};
-    % build the configuration per drone
+    confBuildingTime  = tic;
     for drone = 1:numOfDrones
         %fprintf('calculating confs for drone %i of %i (agentID is %i)\n',drone,numOfDrones,AgentInfo(drone,4));
-        agentFlightTime = AgentInfo(drone,2);
+        agentFlightTime  = AgentInfo(drone,2);
         agentTakeoffTime = AgentInfo(drone,1);
-        speed = AgentInfo(drone,3);
-        agentID = AgentInfo(drone,5);
-        currConfs = zeros(numOfTargets,1);
-        confTimes = zeros(numOfTargets,2,0);
-        allAgentConfs = currConfs;
+        speed            = AgentInfo(drone,3);
+        agentID          = AgentInfo(drone,5);
+        currConfs        = zeros(numOfTargets,1);
+        confTimes        = zeros(numOfTargets,2,0);
+        allAgentConfs    = currConfs;
         droneStat = {};
+        currTargetID     =
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
@@ -66,6 +44,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     fprintf('Done building Confs ');
+    
     confBuildingTime = toc(confBuildingTime);
     fprintf('Done building Confs, elapsed time %f\n',confBuildingTime);
     
@@ -90,23 +69,19 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     fprintf('the number of confs after removing non uniques is: %d\n',size(allConfigurationsU,2));
     agent2conf = agent2confU;
     allConfigurations = allConfigurationsU;
-    
     confVal = target2Val' * allConfigurations;
     
-    %model = 0;
-    %outConf = 0;
-    %AllConf = 0;
-    %excelOut= 0;
-    %return;
     
+  %  <call solver>
     solverTime = tic;
     %[model,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
-    [model,outConf,optVal] = run_gurobi(allConfigurations,agent2conf,confVal,0);
+    [~,outConf,optVal] = run_gurobi(allConfigurations,agent2conf,confVal,0);
     solverTime = toc(solverTime);
     fprintf('Done running solver, elapsed time %f\n',solverTime);
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
+        currTargetID = 
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
@@ -131,7 +106,8 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
 
     col_w = 11;  % Fixed column width in characters
     fr_n = 2;    % Number of fraction digits
-
+  
+    %  <Result>
     % Print header
     hdr_line = '| drone ID  | target ID |   start   |     end   ';
     fprintf('\n\nResults:\n%s\n', hdr_line)
@@ -150,6 +126,5 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     allStat.confBuildTime = confBuildingTime;
     allStat.confDupRemovalTime = dupRemovalTime;
     allStat.inputParsingTime = parsingTime;
-    allStat.allTargets = sumAllVals;
-    
+    allStat.allTargets = sumAllVals;    
 end
