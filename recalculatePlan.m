@@ -19,7 +19,6 @@ function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agen
         confTimes        = zeros(numOfTargets,2,0);
         allAgentConfs    = currConfs;
         droneStat = {};
-        currTargetID     =
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
@@ -81,7 +80,6 @@ function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agen
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
-        currTargetID = 
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];

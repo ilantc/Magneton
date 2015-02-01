@@ -6,7 +6,7 @@
 %           AgentInfo(i,5)  = FlightID;
 %           verbose       - tell me more...
 
-function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,agentInfo,Agent2target,missionLink,verbose)
+function [lp_rlaxation_model,A,b,result] = run_gurobi_lp_relaxation(target2val,targetsData,agentInfo,Agent2target,missionLink,verbose)
     
     targetsData_BEGIN_COL       =4;
     targetsData_END_COL         =5;
@@ -55,21 +55,20 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     % size(c) = I*J*K  +  2*I*J
 
     % gurobi model objective value
-    model.obj = c;
+    lp_rlaxation_model.obj = c;
     
     % set objective function to max 
-    model.modelsense = 'max';
+    lp_rlaxation_model.modelsense = 'max';
     
     % declare integer variables
     vtypes = [repmat('B',[1,numOfYVars]),repmat('C',[1,numOfTimeWinVars])];
-    model.vtype = vtypes;
-    
-    A = [];
-    A = sparse(A);
-    b = [];
+    lp_rlaxation_model.vtype = vtypes;
     
     time = tic;
     % every agent scans the first and last targets
+    A1 = [];
+    A1 = sparse(A1);
+    b1 = [];
     rest = zeros(1,numOfTimeWinVars);
     currBlockTarget0 = [ones(1,NumOfTargets), zeros(1, NumOfTargets * (NumOfTargets - 1))];
     currBlockTargetN = repmat([zeros(1, NumOfTargets -1), 1],[1,NumOfTargets]);
@@ -78,74 +77,61 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         allAgentsAfterI  = zeros(1,(NumOfAgents - i) * NumOfTargets * NumOfTargets);
         row1 = [allAgentsBeforeI,currBlockTarget0,allAgentsAfterI,rest];
         row2 = [allAgentsBeforeI,currBlockTargetN,allAgentsAfterI,rest];
-        A = [A ; row1 ; row2];
-        A = [A ; -1 * row1 ; -1 * row2];
-        b = [b ; 1 ; 1; 1; 1];
+        A1 = [A1 ; row1 ; row2];
+        A1 = [A1 ; -1 * row1 ; -1 * row2];
+        b1 = [b1 ; 1 ; 1; -1; -1];
     end
     verbose && fprintf('every agent scans the first and last targets\nElapsed=%10.2f\n',toc(time));
     
-    
-%     time = tic;
-    % if i scans j right before k, then k starts after j ends
-%     yIndex = 1;
-%     sIndex = getSOrEIndex(sOffset,1,1,NumOfTargets);
-%     eIndex = getSOrEIndex(eOffset,1,1,NumOfTargets);
-%     sIndex = sOffset + 1;
-%     eIndex = eOffset + 1;
-%     for i=1:NumOfAgents
-%         for j=1:NumOfTargets
-%             for k=1:NumOfTargets
-%                 row = zeros(1,NumOfVariables);
-%                 row(yIndex) = -M;
-%                 row(sIndex) = 1;
-%                 row(eIndex) = -1;
-%                 A = [A ; row];
-%                 b = [b ; -1 * M];
-%                 yIndex = yIndex + 1;
-%                 sIndex = sIndex + 1;
-%             end
-%             eIndex = eIndex + 1;
-%             %sIndex = getSOrEIndex(sOffset,1,1,NumOfTargets);
-%             sIndex = sOffset + 1;
-%         end
-%         verbose && fprintf('i=%d',i);
-%     end
-%     verbose && fprintf('if i scans j right before k, then k starts after j ends\nElapsed=%10.2f\n',toc(time));
     time = tic;
     % if i scans j right before k, then k starts after j ends
-    sMatrix      = [];
-    eMatrix      = [];
-    eMatrixBlock = [];
-    sMatrix      = sparse(sMatrix);
-    eMatrix      = sparse(eMatrix);
-    eMatrixBlock = sparse(eMatrixBlock);
+%     sMatrix1      = [];
+%     eMatrix1      = [];
+%     sMatrix1      = sparse(sMatrix1);
+%     eMatrix1      = sparse(eMatrix1);
+    sMatrix      = zeros(NumOfTargets * NumOfTargets * NumOfAgents,NumOfTargets * NumOfAgents);
+    eMatrix      = zeros(NumOfTargets * NumOfTargets * NumOfAgents,NumOfTargets * NumOfAgents);
+    eMatrixBlock = zeros(NumOfTargets * NumOfTargets,NumOfTargets);
+%     eMatrixBlock1 = [];
+%     eMatrixBlock1 = sparse(eMatrixBlock1);
     for i=1:NumOfTargets
-        eMatrixBlock = [eMatrixBlock ; [zeros(NumOfTargets,i - 1), -1 * ones(NumOfTargets,1), zeros(NumOfTargets,NumOfTargets -i)]];
+        eMatrixBlock(((i-1) * NumOfTargets + 1):i * NumOfTargets,i) = -1 * ones(NumOfTargets,1);
+%         eMatrixBlock1 = [eMatrixBlock1 ; [zeros(NumOfTargets,i - 1), -1 * ones(NumOfTargets,1), zeros(NumOfTargets,NumOfTargets -i)]];
     end 
+    sMatrixBlock = repmat(eye(NumOfTargets),[NumOfTargets,1]);
+    rowStep = NumOfTargets * NumOfTargets;
+    colStep = NumOfTargets;
     for i=1:NumOfAgents
-        eMatrix = [eMatrix ; [zeros(NumOfTargets * NumOfTargets,NumOfTargets * (i-1)), eMatrixBlock,                                zeros(NumOfTargets * NumOfTargets,NumOfAgents * NumOfTargets - (NumOfTargets * i))]];
-        sMatrix = [sMatrix ; [zeros(NumOfTargets * NumOfTargets,NumOfTargets * (i-1)), repmat(eye(NumOfTargets),[NumOfTargets,1]) , zeros(NumOfTargets * NumOfTargets,NumOfAgents * NumOfTargets - (NumOfTargets * i))]];
+        eMatrix(((i-1) * rowStep + 1):(i * rowStep),(((i-1) * colStep) + 1):(i * colStep)) = eMatrixBlock;
+        sMatrix(((i-1) * rowStep + 1):(i * rowStep),(((i-1) * colStep) + 1):(i * colStep)) = sMatrixBlock;
+%         eMatrix1 = [eMatrix1 ; [zeros(NumOfTargets * NumOfTargets,NumOfTargets * (i-1)), eMatrixBlock,                                zeros(NumOfTargets * NumOfTargets,NumOfAgents * NumOfTargets - (NumOfTargets * i))]];
+%         sMatrix1 = [sMatrix1 ; [zeros(NumOfTargets * NumOfTargets,NumOfTargets * (i-1)), repmat(eye(NumOfTargets),[NumOfTargets,1]) , zeros(NumOfTargets * NumOfTargets,NumOfAgents * NumOfTargets - (NumOfTargets * i))]];
     end
-    constrMatrix = [-M * eye(numOfYVars),sMatrix, eMatrix];
-    A = [A ; constrMatrix];
-    b = [b ; -M * ones(numOfYVars,1)];
+    A2 = [-M * eye(numOfYVars),sparse(sMatrix), sparse(eMatrix)];
+    b2 = -M * ones(numOfYVars,1);
     verbose && fprintf('if i scans j right before k, then k starts after j ends\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
-    % every target gets scanned within its window 
+    % every target gets scanned within its window
+    A3 = [];
+    A3 = sparse(A3);
+    b3 = [];
     for i=1:NumOfAgents
         for j=1:NumOfTargets
             row1 = zeros(1,NumOfVariables);
             row2 = zeros(1,NumOfVariables);
             row1(getSOrEIndex(sOffset,i,j,NumOfTargets)) = 1;
             row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
-            A = [A ; row1; row2];
-            b = [b ; targetsData(j,targetsData_BEGIN_COL) ; -1 * targetsData(j, targetsData_END_COL)];
+            A3 = [A3 ; row1; row2];
+            b3 = [b3 ; targetsData(j,targetsData_BEGIN_COL) ; -1 * targetsData(j, targetsData_END_COL)];
         end
     end
     verbose && fprintf('every target gets scanned within its window\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
+    A4 = [];
+    A4 = sparse(A4);
+    b4 = [];
     % target 1 is getting scanned by agent i after takeoff(i)
     % target N is finished getting scanned before landing(i)
     for i=1:NumOfAgents
@@ -153,12 +139,15 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         row2 = zeros(1,NumOfVariables);
         row1(getSOrEIndex(eOffset,i,1,NumOfTargets)) = 1;
         row2(getSOrEIndex(sOffset,i,NumOfTargets,NumOfTargets)) = -1;
-        A = [A ; row1; row2];
-        b = [b ; agentInfo(i,1) ; -1 * (agentInfo(i,1) + agentInfo(i,2))];
+        A4 = [A4 ; row1; row2];
+        b4 = [b4 ; agentInfo(i,1) ; -1 * (agentInfo(i,1) + agentInfo(i,2))];
     end
     verbose && fprintf('targets 1 and N are getting scanned by agent i between takeoff(i) and landing(i)\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
+    A5 = [];
+    A5 = sparse(A5);
+    b5 = [];
     % scanning time is t_J for every target j
     for i=1:NumOfAgents
         allAgentsBeforeI = zeros(1,(i-1) * NumOfTargets * NumOfTargets);
@@ -172,8 +161,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
             row1(getSOrEIndex(eOffset,i,j,NumOfTargets)) = -1;
             row2(getSOrEIndex(sOffset,i,j,NumOfTargets)) = -1;
             row2(getSOrEIndex(eOffset,i,j,NumOfTargets)) = 1;
-            A = [A ; row1; row2];
-            b = [b ; 0 ; 0];
+            A5 = [A5 ; row1; row2];
+            b5 = [b5 ; 0 ; 0];
         end
     end
     verbose && fprintf('scanning time is t_J for every target j\nElapsed=%10.2f\n',toc(time));
@@ -186,8 +175,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         new_constraint(iterator)=1;
         iterator=iterator+NumOfTargets;
     end
-    A = [A ; new_constraint; (-1)*new_constraint];
-    b = [b ; 0 ; 0];
+    A6 = [new_constraint; (-1)*new_constraint];
+    b6 = [0 ; 0];
     verbose && fprintf('no targets before 0\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
@@ -199,12 +188,15 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
         iterator=iterator+jump_size;
     end
-    A = [A ; new_constraint; (-1)*new_constraint];
-    b = [b ; 0 ; 0];
+    A7 = [new_constraint; (-1)*new_constraint];
+    b7 = [ 0 ; 0];
     verbose && fprintf('no targets after inf\nElapsed=%10.2f\n',toc(time));
     
     
     time = tic;
+    A8 = [];
+    A8 = sparse(A8);
+    b8 = [];
     % flow constraint %
     for i=1:NumOfAgents
         for j=2:NumOfTargets-1
@@ -215,40 +207,49 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
                 index = cubeIndex2int(i,t,j,NumOfTargets,NumOfTargets);
                 new_constraint(index)=1;
             end
-            A = [A ; new_constraint ; (-1)*new_constraint];
-            b = [b;0;0];
+            A8 = [A8 ; new_constraint ; (-1)*new_constraint];
+            b8 = [b8;0;0];
         end
     end
     verbose && fprintf('flow constrs\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
+    A9 = [];
+    A9 = sparse(A9);
+    b9 = [];
     % each target has maximum one target after 
     jump_size = NumOfTargets*NumOfTargets;
-    for j=0:(NumOfTargets-1)
-        iterator=j*NumOfTargets+2;
+    for j=1:(NumOfTargets-1)
+        iterator=j*NumOfTargets + 1;
         new_constraint=zeros(1,NumOfVariables);
         while iterator<numOfYVars
             new_constraint(iterator:iterator+NumOfTargets - 1)=ones(1,NumOfTargets);
             iterator=iterator+jump_size;
         end
-        A = [A ; (-1)*new_constraint];
-        b = [b ; -1];
+        A9 = [A9 ; (-1)*new_constraint];
+        b9 = [b9 ; -1];
     end
     verbose && fprintf('each target has maximum one target after\nElapsed=%10.2f\n',toc(time));
     
     time = tic;
+    A10 = [];
+    A10 = sparse(A10);
+    b10 = [];
     % scanner constraint
     for i=1:NumOfAgents
         for j=1:NumOfTargets
             new_constraint=zeros(1,NumOfVariables);
             index = cubeIndex2int(i,j,1,NumOfTargets,NumOfTargets);
             new_constraint(index:index+NumOfTargets - 1)=ones(1,NumOfTargets);
-            A = [A ; (-1)*new_constraint];
-            b = [b ; -1*Agent2target(i,j)];
+            A10 = [A10 ; (-1)*new_constraint];
+            b10 = [b10 ; -1*Agent2target(i,j)];
         end
     end
     verbose && fprintf('i scans j only iff canScan(i,j)\nElapsed=%10.2f\n',toc(time));
     
+    A11 = [];
+    A11 = sparse(A11);
+    b11 = [];
     time = tic;
     % Y_i_j_j <= 0
     for i=1:NumOfAgents
@@ -256,17 +257,32 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
             new_constraint=zeros(1,NumOfVariables);
             index = cubeIndex2int(i,j,j,NumOfTargets,NumOfTargets);
             new_constraint(index) = -1;
-            A = [A ; new_constraint];
-            b = [b ; 0];
+            A11 = [A11 ; new_constraint];
+            b11 = [b11 ; 0];
         end
     end
     verbose && fprintf('Y_i_j_j <= 0\nElapsed=%10.2f\n',toc(time));
+
+    A = [];
+    A = sparse(A);
+    b = [];
+    A = [A ; A1];  b = [b ; b1];  % every agent scans the first and last targets
+    A = [A ; A2];  b = [b ; b2];  % if i scans j right before k, then k starts after j ends
+    A = [A ; A3];  b = [b ; b3];  % every target gets scanned within its window
+    A = [A ; A4];  b = [b ; b4];  % targets 1 and N are getting scanned by agent i between takeoff(i) and landing(i)
+    A = [A ; A5];  b = [b ; b5];  % scanning time is t_J for every target j
+    A = [A ; A6];  b = [b ; b6];  % no targets before 0
+    A = [A ; A7];  b = [b ; b7];  % no targets after inf
+    A = [A ; A8];  b = [b ; b8];  % flow constraint %
+    A = [A ; A9];  b = [b ; b9];  % each target has maximum one target after 
+    A = [A ; A10]; b = [b ; b10]; % scanner constraint
+    A = [A ; A11]; b = [b ; b11]; % Y_i_j_j <= 0
     
     % add A and b to the model
-    model.A = sparse(A);
-    model.rhs = b;
-    model.sense = '>';
-    gurobi_write(model, 'model.lp');
+    lp_rlaxation_model.A = sparse(A);
+    lp_rlaxation_model.rhs = b;
+    lp_rlaxation_model.sense = '>';
+    gurobi_write(lp_rlaxation_model, 'model.lp');
     
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -275,8 +291,8 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
     % assign bounds
-    model.lb = zeros(NumOfVariables,1);
-    model.ub = [ones(numOfYVars,1); M * ones(numOfTimeWinVars,1)];
+    lp_rlaxation_model.lb = zeros(NumOfVariables,1);
+    lp_rlaxation_model.ub = [ones(numOfYVars,1); M * ones(numOfTimeWinVars,1)];
     
     % output file for temp memory usage
     params.NodefileStart = 0.5;
@@ -285,31 +301,24 @@ function [result,outConf,res] = run_gurobi_lp_relaxation(target2val,targetsData,
         
     % solve!
     params.outputflag = 1;
-    result = gurobi(model, params);
+    result = gurobi(lp_rlaxation_model, params);
     
-    res = result.objval;
     mat = result.x;
-    mat = reshape(mat,[NumOfConf,NumOfAgents])';
-    configurations = full(configurations);
-    
-    outConf = zeros(NumOfTargets,NumOfAgents);
     
     fprintf('\n\n\n######## results ########\n');
-     for agent = 1:NumOfAgents 
-         for conf = 1:NumOfConf
-            if (mat(agent,conf)==1)
-               %fprintf('agent %d is assigned to targets:',agent);
-                for trgt = 1:NumOfTargets
-                    if (configurations(trgt,conf) == 1) 
-                        outConf(trgt,agent) = 1;
-                        %fprintf(' %d ',trgt);
+     for i = 1:NumOfAgents 
+         for j = 1:NumOfTargets
+             for k = 1:NumOfTargets
+                if (mat(cubeIndex2int(i,j,k,NumOfTargets,NumOfTargets))>0)
+                    kForPrint = k - 1;
+                    if (k == NumOfTargets )
+                        kForPrint = Inf;
                     end
+                    fprintf('agent %d: %d => %d, (%10.2f)\n',i,j-1,kForPrint,mat(cubeIndex2int(i,j,k,NumOfTargets,NumOfTargets)));
                 end
-                %fprintf('\n');
             end
         end
-    end
-    fprintf('opt val = %10.10f\n',res);
+     end
 end
     
 % 1 <= i <= I, 1 <= j <= J, 1 <= k <= K
@@ -365,14 +374,13 @@ end
 
 
 % %%
-% NumOfAgents      = 4;
-% NumOfTargets     = 3;
+% NumOfAgents      = 6;
+% NumOfTargets     = 8;
 % numOfYVars       = NumOfAgents*NumOfTargets*NumOfTargets;
 % numOfTimeWinVars = 2*NumOfAgents*NumOfTargets;
 % NumOfVariables   = numOfYVars + numOfTimeWinVars;
 % sOffset          = numOfYVars;
 % eOffset          = numOfYVars + (NumOfAgents*NumOfTargets);
-% zeros(1,NumOfVariables)         = zeros(1,NumOfVariables);
 % M                = 100;
 % verbose          = 1;
 % A                = [];
