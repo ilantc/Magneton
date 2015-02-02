@@ -1,7 +1,6 @@
-function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confStat] = buildConfigurationsPerDroneBFS(lastLevelConfs,lastLevelTimes,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,amountForBuild,finalAmount,currTargetID)
+function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confStat] = buildConfigurationsPerDroneBFS(lastLevelConfs,lastLevelTimes,speed,agent,agentTakeoffTime,agentFinishTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID)
     %% for all confs in lastLevelConfs - try to add an additional task to
     %% it
-    global Agent2target;
     % global data for this function, derived from input
     numTargets = size(lastLevelConfs,1);
     oldConfSize = sum(lastLevelConfs(:,1) ~= 0);
@@ -16,7 +15,7 @@ function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confSt
             % and agent is able to sense it
             if (Agent2target(agent,targetID) ~= 0)
                 
-                [success,newConf,confTimes] = addToConf(zeros(numTargets,0),zeros(numTargets,2),targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID);
+                [success,newConf,confTimes] = addToConf(zeros(numTargets,0),zeros(numTargets,2),targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID,targetsData);
                 if (success)
                         allConfigurations = [allConfigurations, newConf];
                         allConfTimes(:,:,size(allConfTimes,3)+1) = confTimes;
@@ -36,7 +35,7 @@ function [ allConfigurationsForBuild,allConfigurationsForRun,allConfTimes,confSt
                 % and agent is able to sense it
                 if ((currConf(targetID) == 0) && (Agent2target(agent,targetID) ~= 0))
                     
-                    [success,newConf,confTimes] = addToConf(currConf,currTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,0);
+                    [success,newConf,confTimes] = addToConf(currConf,currTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,0,targetsData);
                     
                     % if feasible - add to all Confs
                     if (success)

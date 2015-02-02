@@ -1,7 +1,5 @@
 function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,missionLink,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
     
-    global targetsData;
-    global Agent2target;
     global target2TargetDistance;
     global missionLink;
     
@@ -18,7 +16,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     numOfTargets = size(target2sensor,1);
     numOfDrones  = size(AgentInfo,1);
 
-    currTargetID = 1 % all drones are in spot 0,0 (target 0)
+    currTargetID = 1; % all drones are in spot 0,0 (target 0)
     
     allConfigurations = zeros(0,numOfTargets);
     agent2conf        = zeros(numOfDrones,0);
@@ -46,7 +44,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
                 confBuildTime = tic;
-                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount,currTargetID);
+                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder
@@ -107,7 +105,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
-        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID);
+        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
             % build the excel output

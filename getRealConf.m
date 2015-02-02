@@ -1,5 +1,4 @@
-function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v,currTargetID)
-    global targetsData;
+function [realConf] = getRealConf(conf,takeoffTime,flightTime,speed,v,currTargetID,targetsData)
     % targetsData col values
     ID_COL          =1;
     BEGIN_COL       =4;

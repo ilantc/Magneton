@@ -1,4 +1,6 @@
-function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agent2conf,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,missionLink,currTime)
+function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime)
+    
+    [agent2location, completedTargets] = readExcelOut(excelOut,currTime);
     updateAgent2target();
     updateTargets();
     updateAgentInfo();
@@ -18,12 +20,16 @@ function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agen
         currConfs        = zeros(numOfTargets,1);
         confTimes        = zeros(numOfTargets,2,0);
         allAgentConfs    = currConfs;
-        droneStat = {};
+        droneStat        = {};
+        currTargetID     = 0;
+        if isfield(agent2location,sprintf('a%d',agentID))
+            currTargetID = agent2location.(sprintf('a%d',agentID));
+        end
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
                 confBuildTime = tic;
-                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,amountForBuild,finalAmount,currTargetID);
+                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,amountForBuild,finalAmount,currTargetID);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder
@@ -80,6 +86,11 @@ function [] = recalculatePlan(buildAmount,runAmount,allowParallel,AgentInfo,agen
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
+        currTargetID = 0;
+        if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
+            currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
+        end
+        
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
