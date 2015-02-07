@@ -1,8 +1,5 @@
 function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, AllConf, excelOut, Agent2sensor, target2sensor,targetsData,target2Val,missionLink,allStat] = mainBFS(file,buildAmount,runAmount,writeOutput,allowParallel)
     
-    global target2TargetDistance;
-    global missionLink;
-    
     amountForBuild = buildAmount;
     finalAmount = runAmount;
     parsingTime = tic;
@@ -44,7 +41,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
                 confBuildTime = tic;
-                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID);
+                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID,target2TargetDistance,missionLink);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder
@@ -73,16 +70,40 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     
     %%%%%%%%%%%%
     % removing duplicate confs
+%     dupRemovalTime = tic;
+%     [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
+%     allConfigurationsU = allConfigurationsU';
+%     agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
+%     for i=1:max(Iu)
+%         % a col vector which indicates which agent can perform this conf
+%         currA2C = sum(agent2conf(:,Iu == i),2);
+%         agent2confU(:,i) = currA2C;
+%     end
+%     dupRemovalTime = toc(dupRemovalTime);
+    
+    % removing duplicate confs
     dupRemovalTime = tic;
-    [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
-    allConfigurationsU = allConfigurationsU';
-    agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
-    for i=1:max(Iu)
-        % a col vector which indicates which agent can perform this conf
-        currA2C = sum(agent2conf(:,Iu == i),2);
-        agent2confU(:,i) = currA2C;
+    allConfigurationsU = allConfigurations(:,1);
+    agent2confU        = agent2conf(:,1);
+    for i=2:size(allConfigurations,2)
+        isU = 1;
+        for j=1:size(allConfigurationsU,2)
+            if allConfigurations(:,i) == allConfigurationsU(:,j)
+                agent2confU(:,j) = agent2confU(:,j) + agent2conf(:,i);
+                isU = 0;
+                break;
+            end
+        end
+        if isU == 1
+            allConfigurationsU = [allConfigurationsU,allConfigurations(:,i)];
+            agent2confU = [agent2confU,agent2conf(:,i)];
+        end
     end
-    dupRemovalTime = toc(dupRemovalTime);
+    fprintf('Done removing duplicates ');
+    toc(dupRemovalTime);
+    
+    
+    
     fprintf('Done removing duplicates, elapsed time %f\n',dupRemovalTime);
     
     fprintf('the number of confs after removing non uniques is: %d\n',size(allConfigurationsU,2));
@@ -105,7 +126,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
     for i=1:size(outConf,2)
-        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData);
+        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData,target2TargetDistance,missionLink);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
             % build the excel output

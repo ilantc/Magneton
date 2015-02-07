@@ -1,6 +1,4 @@
-function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID,targetsData)
-    global target2TargetDistance;
-    global missionLink;
+function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agentTakeoffTime,agentFinishTime,speed,oldConfSize,currTargetID,targetsData,target2TargetDistance,missionLink)
     
     targetsData_BEGIN_COL       =4;
     targetsData_END_COL         =5;

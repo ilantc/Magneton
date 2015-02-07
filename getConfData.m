@@ -1,8 +1,4 @@
-function [confFinishTime, lastTargetIndex] = getConfData(currConf,agentTakeoffTime,speed,oldConfSize,v)
-    
-    %% globals
-    global target2TargetDistance;
-    global targetsData;
+function [confFinishTime, lastTargetIndex] = getConfData(currConf,agentTakeoffTime,speed,oldConfSize,target2TargetDistance,targetsData,v)
   
     targetsData_BEGIN_COL       =4;
     targetsData_DURATION_COL    =6;

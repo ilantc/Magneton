@@ -1,4 +1,4 @@
-function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempConf,confTimes,currConfSize,takeoffTime,finishTime,speed,numTargets,v,currTargetID)
+function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempConf,confTimes,currConfSize,takeoffTime,finishTime,speed,numTargets,v,currTargetID,target2TargetDistance,missionLink)
     
     ID_COL          =1;
     VAL_COL         =3;
@@ -20,7 +20,7 @@ function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempCon
         if (size(currWasScheduled,1) == 0) 
             % check if can schedule it next
             duration    = sortedTargetsData(i,DURATION_COL);
-            [success,confNew,confTimesNew] = addToConf(tempConf,confTimes,currID,takeoffTime,finishTime,speed,currConfSize,currTargetID);
+            [success,confNew,confTimesNew] = addToConf(tempConf,confTimes,currID,takeoffTime,finishTime,speed,currConfSize,currTargetID,target2TargetDistance,missionLink);
 
             if (success)
                 % add this row, and call the recursive function again
@@ -29,7 +29,7 @@ function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempCon
                 val              = 8 - val;
                 tempCurrRealConf(currConfSize + 1,:) = [currID,confTimesNew(currID,1),confTimesNew(currID,2),val];
                 % recursive call
-                foundConf       = findRealConfParralel(sortedTargetsData,tempCurrRealConf,confNew,confTimesNew,currConfSize + 1,takeoffTime,finishTime,speed,numTargets,v,currTargetID);
+                foundConf       = findRealConfParralel(sortedTargetsData,tempCurrRealConf,confNew,confTimesNew,currConfSize + 1,takeoffTime,finishTime,speed,numTargets,v,currTargetID,target2TargetDistance,missionLink);
                 % if found conf is not good, continue, else - return it
                 if (size(foundConf,1) > 0 )
                     RealConf = foundConf;
