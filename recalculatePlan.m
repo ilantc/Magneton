@@ -1,9 +1,8 @@
 function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime)
     
     [agent2location, completedTargets] = readExcelOut(excelOut,currTime);
-    updateAgent2target();
-    updateTargets();
-    updateAgentInfo();
+    [target2sensor,Agent2target,targetsData,target2Val]=updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val);
+    [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     
  %   <build all confs>
     numOfTargets      = size(targetsData,1);
@@ -29,7 +28,9 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
                 confBuildTime = tic;
-                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,amountForBuild,finalAmount,currTargetID);
+                                                              buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID,target2TargetDistance,missionLink);
+            
+                [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,buildAmount,runAmount,currTargetID,target2TargetDistance,missionLink);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
                 % trim top 10k from currConfs here (or inisde the builder
@@ -137,3 +138,28 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
     allStat.inputParsingTime = parsingTime;
     allStat.allTargets = sumAllVals;    
 end
+
+%%
+ function [target2sensor,Agent2target,targetsData,target2Val] = updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val)
+     target2sensor(completedTargets,:) =[];
+     Agent2target(:,completedTargets)  =[];
+     targetsData(completedTargets,:)   =[];
+     target2Val(completedTargets,:)    =[];
+ end
+  
+
+ function [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
+    agentsNeedChange=[];
+    for i=1:size(AgentInfo,1)
+        currAgent=AgentInfo(i,5); % 5 is agent id 
+         if isfield(agent2location,sprintf('a%d',currAgent))
+            agentsNeedChange=[agentsNeedChange,currAgent];
+         end
+    end
+    for i=1:size(agentsNeedChange,2)
+        agentID=agentsNeedChange(i);                               %notice that ID in AgentInfo in descending order
+        AgentInfo(agentID,2)=max(0,AgentInfo(agentID,2)-currTime); % 2 is flight time
+        AgentInfo(agentID,1)=currTime;                             % 1 is takeoff time
+    end
+ end
+ 
