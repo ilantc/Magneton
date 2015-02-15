@@ -11,6 +11,9 @@ function [ success,conf,confTimes] = addToConf(currConf,confTimes,targetID,agent
     conf = 0;
     if (oldConfSize == 0)
         % flight time between targets
+        if currTargetID + 1>size(target2TargetDistance,1)
+            x=7;
+        end
         flightTime = target2TargetDistance(currTargetID + 1,targetID + 1)/(speed*60*60);
 
         % start time for next target

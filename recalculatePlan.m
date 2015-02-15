@@ -1,8 +1,8 @@
-function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime)
-    
+function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink)
     [agent2location, completedTargets] = readExcelOut(excelOut,currTime);
-    [target2sensor,Agent2target,targetsData,target2Val]=updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val);
+    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
+    [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
     
  %   <build all confs>
     numOfTargets      = size(targetsData,1);
@@ -27,9 +27,7 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
             if (size(currConfs,2) > 0 )
-                confBuildTime = tic;
-                                                              buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,amountForBuild,finalAmount,currTargetID,target2TargetDistance,missionLink);
-            
+                confBuildTime = tic;          
                 [currConfs,confsForRun,confTimes,confStat]  = buildConfigurationsPerDroneBFS(currConfs,confTimes,speed,agentID,agentTakeoffTime,agentFlightTime +agentTakeoffTime,target2Val,Agent2target,targetsData,buildAmount,runAmount,currTargetID,target2TargetDistance,missionLink);
                 droneStat.(sprintf('conf%d',confSize)).stat = confStat;
                 droneStat.(sprintf('conf%d',confSize)).time = toc(confBuildTime);
@@ -91,8 +89,8 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
             currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
         end
-        
-        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID);
+
+        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData,target2TargetDistance,missionLink);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
             % build the excel output
@@ -127,7 +125,9 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
     if (writeOutput)
         xlswrite(file,excelOut,'OutAssignment','A3');
     end
-    
+    sumAllVals = sum(target2Val);
+    maxVal = min(sumAllVals,maxValH1(Agent2target,targetsData,AgentInfo,target2Val));
+    fprintf('total value = %d, Best heuristic value = %d\n',sumAllVals,maxVal);
     % save stat
     allStat.val = optVal;
     allStat.runParam = runAmount;
@@ -135,19 +135,45 @@ function [] = recalculatePlan(buildAmount,runAmount,AgentInfo,Agent2sensor,targe
     allStat.solverTime = solverTime;
     allStat.confBuildTime = confBuildingTime;
     allStat.confDupRemovalTime = dupRemovalTime;
-    allStat.inputParsingTime = parsingTime;
+   % allStat.inputParsingTime = parsingTime;
     allStat.allTargets = sumAllVals;    
 end
 
 %%
- function [target2sensor,Agent2target,targetsData,target2Val] = updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val)
-     target2sensor(completedTargets,:) =[];
-     Agent2target(:,completedTargets)  =[];
-     targetsData(completedTargets,:)   =[];
-     target2Val(completedTargets,:)    =[];
+function [newID]= newTargetID(ID,completedTargets)
+    counter=0;
+    for i=1:size(completedTargets,2)  
+        completedID=completedTargets(i);
+        if completedID<ID
+            counter=counter+1;
+        end   
+    end
+    newID=ID-counter;
+end
+
+function [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,Nagents)
+    for i=1:Nagents
+         if isfield(agent2location,sprintf('a%d',i))
+            agent2location.(sprintf('a%d',i))=newTargetID(agent2location.(sprintf('a%d',i)),completedTargets);
+         end
+    end
+end
+
+ function [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink] = updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
+     target2sensor(completedTargets,:)          =[];
+     Agent2target(:,completedTargets)           =[];
+     target2Val(completedTargets,:)             =[];
+     target2TargetDistance(completedTargets+1,:)=[]; % check if need to add +1 
+     target2TargetDistance(:,completedTargets+1)=[]; % check if need to add +1
+     missionLink(:,completedTargets)            =[];
+     missionLink(completedTargets,:)            =[];
+     
+     targetsData(completedTargets,:)            =[];
+     new_targets=1:size(targetsData,1);
+     targetsData(:,1)=new_targets';
+     
  end
   
-
  function [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
     agentsNeedChange=[];
     for i=1:size(AgentInfo,1)
@@ -163,3 +189,4 @@ end
     end
  end
  
+
