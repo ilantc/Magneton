@@ -1,6 +1,6 @@
-function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink)
-    [agent2location, completedTargets] = readExcelOut(excelOut,currTime);
-    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
+function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink,oldAllConf)
+    [agent2location, completedTargets, targetsInProcess] = readExcelOut(excelOut,currTime);
+    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
     
@@ -57,17 +57,37 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     fprintf('the number of unique confs is: %d\n',size(b,1));
     
     %%%%%%%%%%%%
-    % removing duplicate confs
+%     % removing duplicate confs
+%     dupRemovalTime = tic;
+%     [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
+%     allConfigurationsU = allConfigurationsU';
+%     agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
+%     for i=1:max(Iu)
+%         % a col vector which indicates which agent can perform this conf
+%         currA2C = sum(agent2conf(:,Iu == i),2);
+%         agent2confU(:,i) = currA2C;
+%     end
+%     dupRemovalTime = toc(dupRemovalTime);
+
     dupRemovalTime = tic;
-    [allConfigurationsU,~,Iu] = unique(allConfigurations','rows','stable');
-    allConfigurationsU = allConfigurationsU';
-    agent2confU = zeros(numOfDrones,size(allConfigurationsU,2));
-    for i=1:max(Iu)
-        % a col vector which indicates which agent can perform this conf
-        currA2C = sum(agent2conf(:,Iu == i),2);
-        agent2confU(:,i) = currA2C;
+    allConfigurationsU = allConfigurations(:,1);
+    agent2confU        = agent2conf(:,1);
+    for i=2:size(allConfigurations,2)
+        isU = 1;
+        for j=1:size(allConfigurationsU,2)
+            if allConfigurations(:,i) == allConfigurationsU(:,j)
+                agent2confU(:,j) = agent2confU(:,j) + agent2conf(:,i);
+                isU = 0;
+                break;
+            end
+        end
+        if isU == 1
+            allConfigurationsU = [allConfigurationsU,allConfigurations(:,i)];
+            agent2confU = [agent2confU,agent2conf(:,i)];
+        end
     end
-    dupRemovalTime = toc(dupRemovalTime);
+    fprintf('Done removing duplicates ');
+    toc(dupRemovalTime);
     fprintf('Done removing duplicates, elapsed time %f\n',dupRemovalTime);
     
     fprintf('the number of confs after removing non uniques is: %d\n',size(allConfigurationsU,2));
@@ -118,9 +138,12 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     %  <Result>
     % Print header
     hdr_line = '| drone ID  | target ID |   start   |     end   ';
+    data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
+    fprintf('\n\nold results:\n%s\n', hdr_line)
+    fprintf(data_fmt,oldAllConf')
+    
     fprintf('\n\nResults:\n%s\n', hdr_line)
     % Print values
-    data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf(data_fmt, AllConf')
     if (writeOutput)
         xlswrite(file,excelOut,'OutAssignment','A3');
@@ -159,7 +182,17 @@ function [agent2location]=agent2locationUpdatedTargets(agent2location,completedT
     end
 end
 
- function [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink] = updateTargets(completedTargets,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
+ function [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink] = updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
+     
+     % update targets time and Agent2target
+     for t=1:size(targetsData,1)
+         if isfield(targetsInProcess,sprintf('t%d',t))
+             targetsData(t,6) = targetsData(t,6) - targetsInProcess.(sprintf('t%d',t)).elapsed;
+             Agent2target(targetsInProcess.(sprintf('t%d',t)).agent,:) = zeros(1,size(targetsData,1));
+             Agent2target(targetsInProcess.(sprintf('t%d',t)).agent,t) = 1;
+         end
+     end
+     
      target2sensor(completedTargets,:)          =[];
      Agent2target(:,completedTargets)           =[];
      target2Val(completedTargets,:)             =[];
@@ -167,11 +200,9 @@ end
      target2TargetDistance(:,completedTargets+1)=[]; % check if need to add +1
      missionLink(:,completedTargets)            =[];
      missionLink(completedTargets,:)            =[];
-     
      targetsData(completedTargets,:)            =[];
      new_targets=1:size(targetsData,1);
      targetsData(:,1)=new_targets';
-     
  end
   
  function [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
