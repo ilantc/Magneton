@@ -1,5 +1,5 @@
 function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink,oldAllConf)
-    [agent2location, completedTargets, targetsInProcess] = readExcelOut(excelOut,currTime);
+    [agent2location, completedTargets, targetsInProcess, allCapturedTargets] = readExcelOut(excelOut,currTime);
     [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
@@ -104,6 +104,7 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     fprintf('Done running solver, elapsed time %f\n',solverTime);
     AllConf = zeros(0,4);
     excelOut = zeros(0,5);
+    allDoneTargets = completedTargets;
     for i=1:size(outConf,2)
         currTargetID = 0;
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
@@ -117,7 +118,8 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
             % best payload for the first mission
             compatible = Agent2sensor(AgentInfo(i,5),:) .* target2sensor(currConf(1,1),:);
             bestPayload = find(compatible==max(compatible));
-            excelOut = [excelOut ; AgentInfo(i,5) currConf(1,1) bestPayload currConf(1,2:3)];
+            excelOut = [excelOut ; AgentInfo(i,5) origTargetID(currConf(1,1),completedTargets) bestPayload currConf(1,2:3)];
+            allDoneTargets = [allDoneTargets origTargetID(currConf(1,1),completedTargets)];
             for j=2:size(currConf,1)
                 % if there is a gap - insert a "0" mission
                 currFinish = excelOut(size(excelOut,1),5);
@@ -127,7 +129,8 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
                 end
                 compatible = Agent2sensor(AgentInfo(i,5),:) .* target2sensor(currConf(j,1),:);
                 bestPayload = find(compatible == max(compatible));
-                excelOut = [excelOut ; AgentInfo(i,5) currConf(j,1) bestPayload currConf(j,2:3)];
+                excelOut = [excelOut ; AgentInfo(i,5) origTargetID(currConf(j,1),completedTargets) bestPayload currConf(j,2:3)];
+                allDoneTargets = [allDoneTargets origTargetID(currConf(j,1),completedTargets)];
             end
         end
     end
@@ -160,6 +163,9 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     allStat.confDupRemovalTime = dupRemovalTime;
    % allStat.inputParsingTime = parsingTime;
     allStat.allTargets = sumAllVals;    
+    compTargetsNew  = sort(allDoneTargets)
+    compTargetsOrig = sort(allCapturedTargets)
+    
 end
 
 %%
@@ -174,6 +180,16 @@ function [newID]= newTargetID(ID,completedTargets)
     newID=ID-counter;
 end
 
+%%
+function [origID]= origTargetID(ID,completedTargets)
+    origID = ID;
+    for i=1:size(completedTargets,2)  
+        if completedTargets(i) < origID
+            origID = origID+1;
+        end   
+    end
+end
+
 function [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,Nagents)
     for i=1:Nagents
          if isfield(agent2location,sprintf('a%d',i))
@@ -182,27 +198,33 @@ function [agent2location]=agent2locationUpdatedTargets(agent2location,completedT
     end
 end
 
- function [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink] = updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
+ function [target2sensor_,Agent2target_,targetsData_,target2Val_,target2TargetDistance_,missionLink_] = updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
      
+     target2sensor_         = target2sensor;
+     Agent2target_          = Agent2target;
+     targetsData_           = targetsData;
+     target2Val_            = target2Val;
+     target2TargetDistance_ = target2TargetDistance;
+     missionLink_           = missionLink;
      % update targets time and Agent2target
-     for t=1:size(targetsData,1)
+     for t=1:size(targetsData_,1)
          if isfield(targetsInProcess,sprintf('t%d',t))
-             targetsData(t,6) = targetsData(t,6) - targetsInProcess.(sprintf('t%d',t)).elapsed;
-             Agent2target(targetsInProcess.(sprintf('t%d',t)).agent,:) = zeros(1,size(targetsData,1));
-             Agent2target(targetsInProcess.(sprintf('t%d',t)).agent,t) = 1;
+             targetsData_(t,6) = targetsData_(t,6) - targetsInProcess.(sprintf('t%d',t)).elapsed;
+             Agent2target_(targetsInProcess.(sprintf('t%d',t)).agent,:) = zeros(1,size(targetsData_,1));
+             Agent2target_(targetsInProcess.(sprintf('t%d',t)).agent,t) = 1;
          end
      end
      
-     target2sensor(completedTargets,:)          =[];
-     Agent2target(:,completedTargets)           =[];
-     target2Val(completedTargets,:)             =[];
-     target2TargetDistance(completedTargets+1,:)=[]; % check if need to add +1 
-     target2TargetDistance(:,completedTargets+1)=[]; % check if need to add +1
-     missionLink(:,completedTargets)            =[];
-     missionLink(completedTargets,:)            =[];
-     targetsData(completedTargets,:)            =[];
-     new_targets=1:size(targetsData,1);
-     targetsData(:,1)=new_targets';
+     target2sensor_(completedTargets,:)          =[];
+     Agent2target_(:,completedTargets)           =[];
+     target2Val_(completedTargets,:)             =[];
+     target2TargetDistance_(completedTargets+1,:)=[]; % check if need to add +1 
+     target2TargetDistance_(:,completedTargets+1)=[]; % check if need to add +1
+     missionLink_(:,completedTargets)            =[];
+     missionLink_(completedTargets,:)            =[];
+     targetsData_(completedTargets,:)            =[];
+     new_targets=1:size(targetsData_,1);
+     targetsData_(:,1)=new_targets';
  end
   
  function [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
