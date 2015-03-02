@@ -1,9 +1,10 @@
-function [ agent2currTargetLoc, completedTargets, targetsInProcess, allCapturedTargets] = readExcelOut(excelOut, currTime)
+function [ agent2currTargetLoc, completedTargets, targetsInProcess, allCapturedTargets,allConfs] = readExcelOut(excelOut, currTime, nTargets,nAgents)
     agent2lastTargetLoc = struct;
     agent2currTargetLoc = struct;
     targetsInProcess    = struct;
     completedTargets = [];
     allCapturedTargets = [];
+    allConfs = zeros(nTargets,nAgents);
     for excelLine = 1:size(excelOut,1)
         % fprintf('line is %d\n',excelLine);
         currAgent   = excelOut(excelLine,1);
@@ -13,6 +14,7 @@ function [ agent2currTargetLoc, completedTargets, targetsInProcess, allCapturedT
         if currTarget == 0
             continue
         end
+        allConfs(currTarget,currAgent) = 1;
         allCapturedTargets = [allCapturedTargets currTarget];
         if (currTime < endTime) && (currTime >= startTime)
             agent2currTargetLoc.(sprintf('a%d',currAgent)) = currTarget;
@@ -41,5 +43,6 @@ function [ agent2currTargetLoc, completedTargets, targetsInProcess, allCapturedT
         end
     end
     completedTargets = sort(completedTargets);
+    allConfs(completedTargets,:) = [];
 end
 

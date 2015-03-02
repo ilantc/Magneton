@@ -1,5 +1,5 @@
-function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink,oldAllConf)
-    [agent2location, completedTargets, targetsInProcess, allCapturedTargets] = readExcelOut(excelOut,currTime);
+function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink,oldAllConf)
+    [agent2location, completedTargets, targetsInProcess, allCapturedTargets,origConfs] = readExcelOut(excelOut,currTime,size(Agent2target,2),size(Agent2target,1));
     [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
@@ -20,9 +20,9 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
         confTimes        = zeros(numOfTargets,2,0);
         allAgentConfs    = currConfs;
         droneStat        = {};
-        currTargetID     = 0;
+        currTargetID     = 1;
         if isfield(agent2location,sprintf('a%d',agentID))
-            currTargetID = agent2location.(sprintf('a%d',agentID));
+            currTargetID = agent2location.(sprintf('a%d',agentID)) + 1;
         end
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
@@ -48,6 +48,12 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     fprintf('Done building Confs ');
+    allConfigurations = [origConfs allConfigurations];
+    origAgent2conf = zeros(size(AgentInfo,1),size(AgentInfo,1));
+    for a =1:size(AgentInfo,1)
+        origAgent2conf(a,a) = 1;
+    end
+    agent2conf = [origAgent2conf agent2conf];
     
     confBuildingTime = toc(confBuildingTime);
     fprintf('Done building Confs, elapsed time %f\n',confBuildingTime);
@@ -95,7 +101,6 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     allConfigurations = allConfigurationsU;
     confVal = target2Val' * allConfigurations;
     
-    
   %  <call solver>
     solverTime = tic;
     %[model,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
@@ -106,9 +111,9 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     excelOut = zeros(0,5);
     allDoneTargets = completedTargets;
     for i=1:size(outConf,2)
-        currTargetID = 0;
+        currTargetID = 1;
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
-            currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
+            currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5))) + 1;
         end
 
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData,target2TargetDistance,missionLink);
@@ -144,10 +149,25 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     data_fmt = [repmat(['|%', int2str(col_w - 1), '.', int2str(fr_n), 'f '], 1, size(AllConf, 2)), '\n'];
     fprintf('\n\nold results:\n%s\n', hdr_line)
     fprintf(data_fmt,oldAllConf')
+    oldval = 0;
+    for r=1:size(oldAllConf,1)
+        oldval = oldval + oldAllConf(r,5);
+    end
     
     fprintf('\n\nResults:\n%s\n', hdr_line)
     % Print values
     fprintf(data_fmt, AllConf')
+    val = 0;
+    for r=1:size(AllConf,1)
+        val = val + AllConf(r,5);
+    end
+    for r=1:size(completedTargets,2)
+        t = completedTargets(r);
+        val = val + targetsData(t,3);
+    end
+    
+    
+    fprintf('old val = %10.2d\nnewval = %10.2d\n',oldval,val);
     if (writeOutput)
         xlswrite(file,excelOut,'OutAssignment','A3');
     end
@@ -165,6 +185,10 @@ function [] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2
     allStat.allTargets = sumAllVals;    
     compTargetsNew  = sort(allDoneTargets)
     compTargetsOrig = sort(allCapturedTargets)
+    completedTargets
+    agent2location
+    targetsInProcess
+    allCapturedTargets
     
 end
 
@@ -184,7 +208,7 @@ end
 function [origID]= origTargetID(ID,completedTargets)
     origID = ID;
     for i=1:size(completedTargets,2)  
-        if completedTargets(i) < origID
+        if completedTargets(i) <= origID
             origID = origID+1;
         end   
     end
@@ -210,7 +234,7 @@ end
      for t=1:size(targetsData_,1)
          if isfield(targetsInProcess,sprintf('t%d',t))
              targetsData_(t,6) = targetsData_(t,6) - targetsInProcess.(sprintf('t%d',t)).elapsed;
-             Agent2target_(targetsInProcess.(sprintf('t%d',t)).agent,:) = zeros(1,size(targetsData_,1));
+             Agent2target_(:,t) = zeros(size(Agent2target_,1),1);
              Agent2target_(targetsInProcess.(sprintf('t%d',t)).agent,t) = 1;
          end
      end
@@ -227,18 +251,32 @@ end
      targetsData_(:,1)=new_targets';
  end
   
- function [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
-    agentsNeedChange=[];
-    for i=1:size(AgentInfo,1)
-        currAgent=AgentInfo(i,5); % 5 is agent id 
-         if isfield(agent2location,sprintf('a%d',currAgent))
-            agentsNeedChange=[agentsNeedChange,currAgent];
-         end
-    end
-    for i=1:size(agentsNeedChange,2)
-        agentID=agentsNeedChange(i);                               %notice that ID in AgentInfo in descending order
-        AgentInfo(agentID,2)=max(0,AgentInfo(agentID,2)-currTime); % 2 is flight time
-        AgentInfo(agentID,1)=currTime;                             % 1 is takeoff time
+ function [AgentInfo_]=updateAgentInfo(agent2location,currTime,AgentInfo)
+    AgentInfo_ = AgentInfo;
+%     agentsNeedChange=[];
+%     for i=1:size(AgentInfo_,1)
+%         currAgent=AgentInfo_(i,5); % 5 is agent id 
+%          if isfield(agent2location,sprintf('a%d',currAgent))
+%             agentsNeedChange=[agentsNeedChange,currAgent];
+%          end
+%     end
+%     for i=1:size(agentsNeedChange,2)
+%         agentID=agentsNeedChange(i);                               %notice that ID in AgentInfo in descending order
+%         AgentInfo_(agentID,2)=max(0,AgentInfo_(agentID,2)-currTime); % 2 is flight time
+%         AgentInfo_(agentID,1)=currTime;                             % 1 is takeoff time
+%     end
+    
+    for i=1:size(AgentInfo_,1)
+        toTimeCurrTimeDiff = currTime - AgentInfo_(i,1);
+        % if bigger than flight time
+        if toTimeCurrTimeDiff > AgentInfo_(i,2)
+            AgentInfo_(i,2) = 0;
+            AgentInfo_(i,1) = currTime;
+        % still some flight time left
+        elseif toTimeCurrTimeDiff >  0
+            AgentInfo_(i,2) = toTimeCurrTimeDiff;
+            AgentInfo_(i,1) = currTime;
+        end
     end
  end
  
