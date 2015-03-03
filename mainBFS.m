@@ -13,7 +13,7 @@ function [model,outConf,AgentInfo, allConfigurations, agent2conf, Agent2target, 
     numOfTargets = size(target2sensor,1);
     numOfDrones  = size(AgentInfo,1);
 
-    currTargetID = 1; % all drones are in spot 0,0 (target 0)
+    currTargetID = 0; % all drones are in spot 0,0 (target 0)
     
     allConfigurations = zeros(0,numOfTargets);
     agent2conf        = zeros(numOfDrones,0);

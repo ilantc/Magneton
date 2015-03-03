@@ -20,9 +20,9 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         confTimes        = zeros(numOfTargets,2,0);
         allAgentConfs    = currConfs;
         droneStat        = {};
-        currTargetID     = 1;
+        currTargetID     = 0;
         if isfield(agent2location,sprintf('a%d',agentID))
-            currTargetID = agent2location.(sprintf('a%d',agentID)) + 1;
+            currTargetID = agent2location.(sprintf('a%d',agentID));
         end
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
@@ -48,6 +48,8 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
     fprintf('Done building Confs ');
+    allConfigurations = [];
+    agent2conf = [];
     allConfigurations = [origConfs allConfigurations];
     origAgent2conf = zeros(size(AgentInfo,1),size(AgentInfo,1));
     for a =1:size(AgentInfo,1)
@@ -111,9 +113,9 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     excelOut = zeros(0,5);
     allDoneTargets = completedTargets;
     for i=1:size(outConf,2)
-        currTargetID = 1;
+        currTargetID = 0;
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
-            currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5))) + 1;
+            currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
         end
 
         currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData,target2TargetDistance,missionLink);
@@ -278,6 +280,8 @@ end
         elseif toTimeCurrTimeDiff >  0
             AgentInfo_(i,2) = toTimeCurrTimeDiff;
             AgentInfo_(i,1) = currTime;
+        else
+            AgentInfo_(i,1) = AgentInfo_(i,1) - currTime;
         end
     end
  end
