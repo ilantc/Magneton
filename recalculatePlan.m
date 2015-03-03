@@ -1,6 +1,6 @@
 function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor, Agent2target,excelOut,targetsData,target2Val,currTime,target2TargetDistance,missionLink,oldAllConf)
     [agent2location, completedTargets, targetsInProcess, allCapturedTargets,origConfs] = readExcelOut(excelOut,currTime,size(Agent2target,2),size(Agent2target,1));
-    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink);
+    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink,currTime);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
     
@@ -222,7 +222,7 @@ function [agent2location]=agent2locationUpdatedTargets(agent2location,completedT
     end
 end
 
- function [target2sensor_,Agent2target_,targetsData_,target2Val_,target2TargetDistance_,missionLink_] = updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink)
+ function [target2sensor_,Agent2target_,targetsData_,target2Val_,target2TargetDistance_,missionLink_] = updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink,currTime)
      
      target2sensor_         = target2sensor;
      Agent2target_          = Agent2target;
@@ -232,6 +232,8 @@ end
      missionLink_           = missionLink;
      % update targets time and Agent2target
      for t=1:size(targetsData_,1)
+         targetsData_(t,4) = max(targetsData_(t,4) - currTime,0); % start window
+         targetsData_(t,5) = max(targetsData_(t,5) - currTime,0); % end Time
          if isfield(targetsInProcess,sprintf('t%d',t))
              targetsData_(t,6) = targetsData_(t,6) - targetsInProcess.(sprintf('t%d',t)).elapsed;
              Agent2target_(:,t) = zeros(size(Agent2target_,1),1);
