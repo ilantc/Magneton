@@ -3,7 +3,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink,currTime);
     [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     [agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
-    
+    v = 0;
  %   <build all confs>
     numOfTargets      = size(targetsData,1);
     numOfDrones       = size(AgentInfo,1);
@@ -117,8 +117,12 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
             currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
         end
-
-        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),0,currTargetID,targetsData,target2TargetDistance,missionLink);
+        if i==1
+            v = 1;
+        else 
+            v = 0;
+        end
+        currConf = getRealConf(outConf(:,i),AgentInfo(i,1),AgentInfo(i,2),AgentInfo(i,3),v,currTargetID,targetsData,target2TargetDistance,missionLink);
         if (size(currConf,1) > 0) 
             AllConf = [AllConf ; (ones(size(currConf,1),1) * AgentInfo(i,5)) currConf];
             % build the excel output
@@ -139,6 +143,8 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
                 excelOut = [excelOut ; AgentInfo(i,5) origTargetID(currConf(j,1),completedTargets) bestPayload currConf(j,2:3)];
                 allDoneTargets = [allDoneTargets origTargetID(currConf(j,1),completedTargets)];
             end
+        else
+            fprintf('could not find conf for agent %d\n',i)
         end
     end
 
@@ -278,7 +284,7 @@ end
             AgentInfo_(i,1) = currTime;
         % still some flight time left
         elseif toTimeCurrTimeDiff >  0
-            AgentInfo_(i,2) = toTimeCurrTimeDiff;
+            AgentInfo_(i,2) = AgentInfo_(i,2) - toTimeCurrTimeDiff;
             AgentInfo_(i,1) = currTime;
         else
             AgentInfo_(i,1) = AgentInfo_(i,1) - currTime;

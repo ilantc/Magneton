@@ -10,9 +10,18 @@ function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempCon
         return;
     end
     
+    if v==1
+        sortedTargetsData
+        currRealConf
+        currConfSize
+        takeoffTime
+        finishTime
+        currTargetID
+    end
+    
     % find the next candidate, or return an empty conf to signal that no
     % one was found
-    for (i = 1:size(sortedTargetsData,1))
+    for i =1:size(sortedTargetsData,1)
         
         currID = sortedTargetsData(i,ID_COL);
         currWasScheduled = currRealConf(currRealConf(:,ID_COL) == currID,:);
@@ -21,6 +30,9 @@ function[RealConf] = findRealConfParralel(sortedTargetsData,currRealConf,tempCon
             % check if can schedule it next
             duration    = sortedTargetsData(i,DURATION_COL);
             [success,confNew,confTimesNew] = addToConf(tempConf,confTimes,currID,takeoffTime,finishTime,speed,currConfSize,currTargetID,targetsData,target2TargetDistance,missionLink);
+            if v
+                success
+            end
             if (success)
                 % add this row, and call the recursive function again
                 tempCurrRealConf = currRealConf;
