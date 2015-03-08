@@ -171,7 +171,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     end
     for r=1:size(completedTargets,2)
         t = completedTargets(r);
-        val = val + targetsData(t,3);
+        val = val +(8- targetsData(t,3));
     end
     
     
@@ -193,6 +193,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     allStat.allTargets = sumAllVals;    
     compTargetsNew  = sort(allDoneTargets)
     compTargetsOrig = sort(allCapturedTargets)
+    %compTargetsNew==compTargetsOrig
     completedTargets
     agent2location
     targetsInProcess
@@ -285,7 +286,7 @@ end
         % still some flight time left
         elseif toTimeCurrTimeDiff >  0
             AgentInfo_(i,2) = AgentInfo_(i,2) - toTimeCurrTimeDiff;
-            AgentInfo_(i,1) = currTime;
+            AgentInfo_(i,1) = 0;
         else
             AgentInfo_(i,1) = AgentInfo_(i,1) - currTime;
         end
