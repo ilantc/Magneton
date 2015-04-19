@@ -43,6 +43,7 @@ function [ agent2currTargetLoc, completedTargets, targetsInProcess, allCapturedT
         end
     end
     completedTargets = sort(completedTargets);
-    allConfs(completedTargets,:) = [];
+    %allConfs(completedTargets,:) = [];
+    allConfs(completedTargets,:) = 0;
 end
 

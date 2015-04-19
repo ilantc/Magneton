@@ -103,14 +103,14 @@ function [result,outConf,res] = run_gurobi(configurations,agent2conf,confVal,ver
      for agent = 1:NumOfAgents 
          for conf = 1:NumOfConf
             if (mat(agent,conf)==1)
-               %fprintf('agent %d is assigned to targets:',agent);
+               fprintf('agent %d is assigned to targets:',agent);
                 for trgt = 1:NumOfTargets
                     if (configurations(trgt,conf) == 1) 
                         outConf(trgt,agent) = 1;
-                        %fprintf(' %d ',trgt);
+                        fprintf(' %d ',trgt);
                     end
                 end
-                %fprintf('\n');
+                fprintf('\n');
             end
         end
     end
