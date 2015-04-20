@@ -1,7 +1,7 @@
-function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor_, Agent2target_,excelOut,targetsData_,target2Val_,currTime,target2TargetDistance_,missionLink_,oldAllConf)
-    [agent2location, completedTargets, targetsInProcess, allCapturedTargets,origConfs] = readExcelOut(excelOut,currTime,size(Agent2target_,2),size(Agent2target_,1));
-    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor_,Agent2target_,targetsData_,target2Val_,target2TargetDistance_,missionLink_,currTime);
-    [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo)
+function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,writeOutput,AgentInfo,Agent2sensor,target2sensor__, Agent2target__,excelOut,targetsData__,target2Val__,currTime,target2TargetDistance__,missionLink__,oldAllConf)
+    [agent2location, completedTargets, targetsInProcess, allCapturedTargets,origConfs] = readExcelOut(excelOut,currTime,size(Agent2target__,2),size(Agent2target__,1));
+    [target2sensor,Agent2target,targetsData,target2Val,target2TargetDistance,missionLink]=updateTargets(completedTargets,targetsInProcess,target2sensor__,Agent2target__,targetsData__,target2Val__,target2TargetDistance__,missionLink__,currTime);
+    [AgentInfo]=updateAgentInfo(agent2location,currTime,AgentInfo);
     %[agent2location]=agent2locationUpdatedTargets(agent2location,completedTargets,size(AgentInfo,1));
     v = 0;
  %   <build all confs>
@@ -23,20 +23,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         currTargetID     = 0;
         if isfield(agent2location,sprintf('a%d',agentID))
             currTargetID = agent2location.(sprintf('a%d',agentID));
-        end
-        
-        if agentID == 4
-            agentFlightTime
-            agentTakeoffTime
-            speed
-            agentID
-            currConfs
-            confTimes
-            allAgentConfs
-            droneStat
-            currTargetID
-        end
-            
+        end            
         
         for confSize=1:12
             %fprintf('\tconf size %i\n',confSize - 1);
@@ -58,9 +45,6 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         currAgent2conf(drone,:) = ones(1,size(allAgentConfs,2));
         agent2conf = [agent2conf currAgent2conf];
         allConfigurations = [allConfigurations allAgentConfs];
-        if agentID == 4
-            allAgentConfs
-        end
         allStat.(sprintf('drone%d',drone)) = droneStat;
         fprintf('done drone %i of %i\n',drone,numOfDrones);
     end
@@ -101,7 +85,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         isU = 1;
         for j=1:size(allConfigurationsU,2)
             if allConfigurations(:,i) == allConfigurationsU(:,j)
-                agent2confU(:,j) = agent2confU(:,j) + agent2conf(:,i);
+                agent2confU(:,j) = agent2confU(:,j) | agent2conf(:,i);
                 isU = 0;
                 break;
             end
@@ -124,7 +108,6 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     solverTime = tic;
     %[model,outConf] = run_LP_Solve(allConfigurations,agent2conf,confVal,0);
     [~,outConf,optVal] = run_gurobi(allConfigurations,agent2conf,confVal,0);
-    outConf
     solverTime = toc(solverTime);
     fprintf('Done running solver, elapsed time %f\n',solverTime);
     AllConf = zeros(0,4);
@@ -135,7 +118,7 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
         if isfield(agent2location,sprintf('a%d',AgentInfo(i,5)))
             currTargetID = agent2location.(sprintf('a%d',AgentInfo(i,5)));
         end
-        if i==4
+        if i==400
             v = 1;
         else 
             v = 0;
@@ -209,13 +192,13 @@ function [allConfigurations,agent2conf] = recalculatePlan(buildAmount,runAmount,
     allStat.confDupRemovalTime = dupRemovalTime;
    % allStat.inputParsingTime = parsingTime;
     allStat.allTargets = sumAllVals;    
-    compTargetsNew  = sort(allDoneTargets)
-    compTargetsOrig = sort(allCapturedTargets)
+    compTargetsNew  = sort(allDoneTargets);
+    compTargetsOrig = sort(allCapturedTargets);
     %compTargetsNew==compTargetsOrig
-    completedTargets
-    agent2location
-    targetsInProcess
-    allCapturedTargets
+%     completedTargets
+%     agent2location
+%     targetsInProcess
+%     allCapturedTargets
     
 end
 
@@ -267,11 +250,11 @@ end
              Agent2target_(targetsInProcess.(sprintf('t%d',t)).agent,t) = 1;
          end
      end
-     
-     for i=1:size(completedTargets,1)
+     for i=1:size(completedTargets,2)
          %% set window to be 0
-         targetsData_(completedTargets(i),4) = 0;
-         targetsData_(completedTargets(i),5) = 0;
+         Agent2target_(:,completedTargets(i)) = zeros(size(Agent2target_,1),1);
+%          targetsData_(completedTargets(i),4) = 0;
+%          targetsData_(completedTargets(i),5) = 0;
      end
      
 %      target2sensor_(completedTargets,:)          =[];
@@ -306,7 +289,7 @@ end
         % if bigger than flight time
         if toTimeCurrTimeDiff > AgentInfo_(i,2)
             AgentInfo_(i,2) = 0;
-            AgentInfo_(i,1) = currTime;
+            AgentInfo_(i,1) = 0;
         % still some flight time left
         elseif toTimeCurrTimeDiff >  0
             AgentInfo_(i,2) = AgentInfo_(i,2) - toTimeCurrTimeDiff;
