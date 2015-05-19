@@ -1,10 +1,8 @@
-function [stat_obj] = Get_All_Stat(files,buildAmount,runAmount,write,allowPar)
+function [stat_obj] = Get_All_Stat(buildAmount,runAmount,write,allowPar)
+    files ={'30Missions','30Missions_2','40Missions','40Missions_2','50Missions','50Missions_2','60Missions','60Missions_2','80Missions','80Missions_2'};
     for k=1:length(files)
         file=sprintf('%s.xlsx',files{k})
-        [~,~,~, allConfigurations, agent2conf, ~, ~, ~, ~, ~,targetsData,allStat] = mainBFS(file,buildAmount,runAmount,write,allowPar);
+        [~,~,~, ~, ~, ~, ~, excelOut, ~, ~,~,~,~,allStat,~] = mainBFS(file,buildAmount,runAmount,write,allowPar);
         stat_obj.(sprintf('f_%s',files{k})).allStat = allStat;
-        stat_obj.(sprintf('f_%s',files{k})).allConfigurations = allConfigurations;
-        stat_obj.(sprintf('f_%s',files{k})).agent2conf = agent2conf;
-        stat_obj.(sprintf('f_%s',files{k})).targetsData = targetsData;
     end
 end
